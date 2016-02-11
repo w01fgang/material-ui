@@ -2,12 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import WindowListenable from '../mixins/window-listenable';
 import RenderToLayer from '../render-to-layer';
-import StylePropable from '../mixins/style-propable';
 import PropTypes from '../utils/prop-types';
 import Paper from '../paper';
 import throttle from 'lodash.throttle';
-import DefaultRawTheme from '../styles/raw-themes/light-raw-theme';
-import ThemeManager from '../styles/theme-manager';
+import getMuiTheme from '../styles/getMuiTheme';
 import PopoverDefaultAnimation from './popover-default-animation';
 
 const Popover = React.createClass({
@@ -105,13 +103,11 @@ const Popover = React.createClass({
     muiTheme: React.PropTypes.object,
   },
 
-  //for passing default theme context to children
   childContextTypes: {
     muiTheme: React.PropTypes.object,
   },
 
   mixins: [
-    StylePropable,
     WindowListenable,
   ],
 
@@ -145,7 +141,7 @@ const Popover = React.createClass({
     return {
       open: this.props.open,
       closing: false,
-      muiTheme: this.context.muiTheme ? this.context.muiTheme : ThemeManager.getMuiTheme(DefaultRawTheme),
+      muiTheme: this.context.muiTheme || getMuiTheme(),
     };
   },
 
@@ -305,10 +301,9 @@ const Popover = React.createClass({
       targetPosition = this.applyAutoPositionIfNeeded(anchor, target, targetOrigin, anchorOrigin, targetPosition);
     }
 
-
-    targetEl.style.top = Math.max(0, targetPosition.top) + 'px';
-    targetEl.style.left = Math.max(0, targetPosition.left) + 'px';
-    targetEl.style.maxHeight = window.innerHeight + 'px';
+    targetEl.style.top = `${Math.max(0, targetPosition.top)}px`;
+    targetEl.style.left = `${Math.max(0, targetPosition.left)}px`;
+    targetEl.style.maxHeight = `${window.innerHeight}px`;
   },
 
   autoCloseWhenOffScreen(anchorPosition) {
@@ -397,7 +392,8 @@ const Popover = React.createClass({
         open={this.state.open}
         componentClickAway={this.componentClickAway}
         useLayerForClickAway={this.props.useLayerForClickAway}
-        render={this.renderLayer} />
+        render={this.renderLayer}
+      />
     );
   },
 

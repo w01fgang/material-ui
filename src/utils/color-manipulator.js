@@ -14,7 +14,7 @@ export default {
    *
    * Formula: http://www.w3.org/TR/2008/REC-WCAG20-20081211/#relativeluminancedef
    */
-  _luminance(color) {
+  luminance(color) {
     color = this._decomposeColor(color);
 
     if (color.type.indexOf('rgb') > -1) {
@@ -39,15 +39,15 @@ export default {
    *                   with the original color object, such as an alpha value.
    */
   _convertColorToString(color, additonalValue) {
-    let str = color.type + '(' +
-              parseInt(color.values[0]) + ',' +
-              parseInt(color.values[1]) + ',' +
-              parseInt(color.values[2]);
+    let str = `${color.type}(${
+      parseInt(color.values[0])}, ${
+      parseInt(color.values[1])}, ${
+      parseInt(color.values[2])}`;
 
     if (additonalValue !== undefined) {
-      str += ',' + additonalValue + ')';
+      str += `, ${additonalValue})`;
     } else if (color.values.length === 4) {
-      str += ',' + color.values[3] + ')';
+      str += `, ${color.values[3]})`;
     } else {
       str += ')';
     }
@@ -71,9 +71,7 @@ export default {
       b:	parseInt(color.substr(5, 2), 16),
     };
 
-    return 'rgb(' + values.r + ',' +
-                    values.g + ',' +
-                    values.b + ')';
+    return `rgb(${values.r}, ${values.g}, ${values.b})`;
   },
 
   // Returns the type and values of a color of any given type.
@@ -97,8 +95,8 @@ export default {
     return this._convertColorToString(color, amount);
   },
 
-  // Desaturates rgb and sets opacity to 0.15
-  lighten(color, amount) {
+  // Desaturates rgb and sets opacity (defaults to 0.15)
+  lighten(color, amount, opacity = '0.15') {
     color = this._decomposeColor(color);
 
     if (color.type.indexOf('hsl') > -1) {
@@ -113,7 +111,7 @@ export default {
 
     if (color.type.indexOf('a') <= -1) color.type += 'a';
 
-    return this._convertColorToString(color, '0.15');
+    return this._convertColorToString(color, opacity);
   },
 
   darken(color, amount) {
@@ -137,8 +135,8 @@ export default {
   //
   // Formula: http://www.w3.org/TR/2008/REC-WCAG20-20081211/#contrast-ratiodef
   contrastRatio(background, foreground) {
-    let lumA = this._luminance(background);
-    let lumB = this._luminance(foreground);
+    let lumA = this.luminance(background);
+    let lumB = this.luminance(foreground);
 
     if (lumA >= lumB) {
       return ((lumA + 0.05) / (lumB + 0.05)).toFixed(2);

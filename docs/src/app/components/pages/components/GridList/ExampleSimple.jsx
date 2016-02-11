@@ -1,8 +1,23 @@
 import React from 'react';
 import GridList from 'material-ui/lib/grid-list/grid-list';
 import GridTile from 'material-ui/lib/grid-list/grid-tile';
-import StarBorder from 'material-ui/svg-icons/toggle/star-border';
+import StarBorder from 'material-ui/lib/svg-icons/toggle/star-border';
 import IconButton from 'material-ui/lib/icon-button';
+import Subheader from 'material-ui/lib/Subheader';
+
+const styles = {
+  root: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+  },
+  gridList: {
+    width: 500,
+    height: 400,
+    overflowY: 'auto',
+    marginBottom: 24,
+  },
+};
 
 const tilesData = [
   {
@@ -47,22 +62,24 @@ const tilesData = [
   },
 ];
 
-const tileElements = tilesData.map(tile => <GridTile
-  key={tile.img}
-  title={tile.title}
-  subtitle={<span>by <b>{tile.author}</b></span>}
-  actionIcon={<IconButton><StarBorder color="white"/></IconButton>}
-  ><img src={tile.img} /></GridTile>);
-const gridListStyle = {width: 500, height: 400, overflowY: 'auto', marginBottom: 24};
 
 const GridListExampleSimple = () => (
-  <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around'}}>
-    {/* Basic grid list with mostly default options */}
+  <div style={styles.root}>
     <GridList
       cellHeight={200}
-      style={gridListStyle}
-      >
-      {tileElements}
+      style={styles.gridList}
+    >
+      <Subheader>December</Subheader>
+      {tilesData.map((tile) => (
+        <GridTile
+          key={tile.img}
+          title={tile.title}
+          subtitle={<span>by <b>{tile.author}</b></span>}
+          actionIcon={<IconButton><StarBorder color="white"/></IconButton>}
+        >
+          <img src={tile.img} />
+        </GridTile>
+      ))}
     </GridList>
   </div>
 );

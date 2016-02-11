@@ -1,4 +1,6 @@
 import React from 'react';
+import Title from 'react-title-component';
+
 import CodeExample from '../../../CodeExample';
 import PropTypeDescription from '../../../PropTypeDescription';
 import MarkdownElement from '../../../MarkdownElement';
@@ -17,11 +19,13 @@ const descriptions = {
   noFilter: 'The first example has `MenuItem`s in its data source that display on data entry. ' +
   'The second example uses an array of values as its `dataSource`, and updates onFocus ' +
   'Both examples have filtering disabled.',
-  filters: 'Two examples of filtering. The first uses `fuzzyFilter`, the second uses `caseInsensitiveFilter`.',
+  filters: 'Two examples of filtering. The first uses `caseInsensitiveFilter`, the second uses `fuzzyFilter`, ' +
+  'and has limits the number of results displayed using the `maxSearchResults` property.',
 };
 
 const AutoCompletesPage = () => (
   <div>
+    <Title render={(previousTitle) => `Auto Complete - ${previousTitle}`} />
     <MarkdownElement text={autoCompleteReadmeText} />
     <CodeExample
       code={autoCompleteExampleSimpleCode}

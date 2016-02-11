@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom';
 import StylePropable from './mixins/style-propable';
 import Transitions from './styles/transitions';
 import FocusRipple from './ripples/focus-ripple';
-import DefaultRawTheme from './styles/raw-themes/light-raw-theme';
-import ThemeManager from './styles/theme-manager';
+import getMuiTheme from './styles/getMuiTheme';
+import autoPrefix from './styles/auto-prefix';
 
 /**
   * Verifies min/max range.
@@ -36,7 +36,7 @@ let valueInRangePropType = (props, propName, componentName) => {
 
   let value = props[propName];
   if (value < props.min || props.max < value) {
-    return new Error(propName + ' should be within the range specified by min and max');
+    return new Error(`${propName} should be within the range specified by min and max`);
   }
 };
 
@@ -173,7 +173,7 @@ const Slider = React.createClass({
       hovered: false,
       percent: percent,
       value: value,
-      muiTheme: this.context.muiTheme ? this.context.muiTheme : ThemeManager.getMuiTheme(DefaultRawTheme),
+      muiTheme: this.context.muiTheme || getMuiTheme(),
     };
   },
 
@@ -199,7 +199,7 @@ const Slider = React.createClass({
   getStyles() {
     let fillGutter = this.getTheme().handleSize / 2;
     let disabledGutter = this.getTheme().trackSize + this.getTheme().handleSizeDisabled / 2;
-    let calcDisabledSpacing = this.props.disabled ? ' - ' + disabledGutter + 'px' : '';
+    let calcDisabledSpacing = this.props.disabled ? ` -${disabledGutter}px` : '';
     let styles = {
       root: {
         touchCallout: 'none',
@@ -231,7 +231,7 @@ const Slider = React.createClass({
         top: 0,
         left: '0%',
         zIndex: 1,
-        margin: (this.getTheme().trackSize / 2) + 'px 0 0 0',
+        margin: `${(this.getTheme().trackSize / 2)}px 0 0 0`,
         width: this.getTheme().handleSize,
         height: this.getTheme().handleSize,
         backgroundColor: this.getTheme().selectionColor,
@@ -240,10 +240,10 @@ const Slider = React.createClass({
         borderRadius: '50%',
         transform: 'translate(-50%, -50%)',
         transition:
-          Transitions.easeOut('450ms', 'background') + ',' +
-          Transitions.easeOut('450ms', 'border-color') + ',' +
-          Transitions.easeOut('450ms', 'width') + ',' +
-          Transitions.easeOut('450ms', 'height'),
+          `${Transitions.easeOut('450ms', 'background')}, ${
+          Transitions.easeOut('450ms', 'border-color')}, ${
+          Transitions.easeOut('450ms', 'width')}, ${
+          Transitions.easeOut('450ms', 'height')}`,
         overflow: 'visible',
       },
       handleWhenDisabled: {
@@ -255,7 +255,7 @@ const Slider = React.createClass({
         border: 'none',
       },
       handleWhenPercentZero: {
-        border: this.getTheme().trackSize + 'px solid ' + this.getTheme().handleColorZero,
+        border: `${this.getTheme().trackSize}px solid ${this.getTheme().handleColorZero}`,
         backgroundColor: this.getTheme().handleFillColor,
         boxShadow: 'none',
       },
@@ -265,8 +265,7 @@ const Slider = React.createClass({
         height: this.getTheme().handleSizeDisabled,
       },
       handleWhenPercentZeroAndFocused: {
-        border: this.getTheme().trackSize + 'px solid ' +
-          this.getTheme().trackColorSelected,
+        border: `${this.getTheme().trackSize}px solid ${this.getTheme().trackColorSelected}`,
       },
       handleWhenActive: {
         width: this.getTheme().handleSizeActive,
@@ -294,13 +293,13 @@ const Slider = React.createClass({
         this.getTheme().trackColor :
         this.getTheme().selectionColor,
       marginRight: fillGutter,
-      width: 'calc(' + (this.state.percent * 100) + '%' + calcDisabledSpacing + ')',
+      width: `calc(${(this.state.percent * 100)}%${calcDisabledSpacing})`,
     });
     styles.remaining = this.mergeStyles(styles.filledAndRemaining, {
       right: 0,
       backgroundColor: this.getTheme().trackColor,
       marginLeft: fillGutter,
-      width: 'calc(' + ((1 - this.state.percent) * 100) + '%' + calcDisabledSpacing + ')',
+      width: `calc(${((1 - this.state.percent) * 100)}%${calcDisabledSpacing})`,
     });
 
     return styles;
@@ -312,11 +311,7 @@ const Slider = React.createClass({
   // similar issues.
   _toggleSelection(value) {
     let body = document.getElementsByTagName('body')[0];
-    body.style['user-select'] = value;
-    body.style['-webkit-user-select'] = value;
-    body.style['-moz-user-select'] = value;
-    body.style['-ms-user-select'] = value;
-    body.style['-o-user-select'] = value;
+    autoPrefix.set(body.style, 'userSelect', value, this.state.muiTheme);
   },
 
   _onHandleTouchStart(e) {
@@ -513,7 +508,7 @@ const Slider = React.createClass({
       this.state.focused && {outline: 'none'},
       this.props.disabled && styles.handleWhenDisabled,
       {
-        left: (percent * 100) + '%',
+        left: `${(percent * 100)}%`,
       }
     );
     let rippleStyle = this.mergeStyles(
@@ -536,7 +531,9 @@ const Slider = React.createClass({
           style={this.mergeStyles(rippleStyle)}
           innerStyle={styles.rippleInner}
           show={rippleShowCondition}
-          color={rippleColor}/>
+          muiTheme={this.state.muiTheme}
+          color={rippleColor}
+        />
       );
     }
 
@@ -553,13 +550,15 @@ const Slider = React.createClass({
       <div {...others } style={this.prepareStyles(this.props.style)}>
         <span>{this.props.description}</span>
         <span>{this.props.error}</span>
-        <div style={this.prepareStyles(sliderStyles)}
+        <div
+          style={this.prepareStyles(sliderStyles)}
           onFocus={this._onFocus}
           onBlur={this._onBlur}
           onMouseDown={this._onMouseDown}
           onMouseEnter={this._onMouseEnter}
           onMouseLeave={this._onMouseLeave}
-          onMouseUp={this._onMouseUp} >
+          onMouseUp={this._onMouseUp}
+        >
           <div ref="track" style={this.prepareStyles(styles.track)}>
             <div style={this.prepareStyles(styles.filled)}></div>
             <div style={this.prepareStyles(remainingStyles)}></div>
@@ -574,11 +573,11 @@ const Slider = React.createClass({
           required={this.props.required}
           min={this.props.min}
           max={this.props.max}
-          step={this.props.step} />
+          step={this.props.step}
+        />
       </div>
     );
   },
-
 });
 
 export default Slider;

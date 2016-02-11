@@ -2,11 +2,25 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import TabTemplate from './tabTemplate';
 import InkBar from '../ink-bar';
-import StylePropable from '../mixins/style-propable';
-import Controllable from '../mixins/controllable';
-import DefaultRawTheme from '../styles/raw-themes/light-raw-theme';
-import ThemeManager from '../styles/theme-manager';
+import getMuiTheme from '../styles/getMuiTheme';
 import warning from 'warning';
+
+function getStyles(props, state) {
+  const {
+    tabs,
+  } = state.muiTheme;
+
+  return {
+    tabItemContainer: {
+      margin: 0,
+      padding: 0,
+      width: '100%',
+      backgroundColor: tabs.backgroundColor,
+      whiteSpace: 'nowrap',
+    },
+  };
+}
+
 
 const Tabs = React.createClass({
 
@@ -78,14 +92,10 @@ const Tabs = React.createClass({
     muiTheme: React.PropTypes.object,
   },
 
-  mixins: [
-    StylePropable,
-    Controllable,
-  ],
-
   getDefaultProps() {
     return {
       initialSelectedIndex: 0,
+      onChange: () => {},
     };
   },
 
@@ -99,7 +109,7 @@ const Tabs = React.createClass({
         initialIndex < this.getTabCount() ?
         initialIndex :
         0,
-      muiTheme: this.context.muiTheme ? this.context.muiTheme : ThemeManager.getMuiTheme(DefaultRawTheme),
+      muiTheme: this.context.muiTheme || getMuiTheme(),
     };
   },
 
@@ -111,13 +121,15 @@ const Tabs = React.createClass({
 
   componentWillReceiveProps(newProps, nextContext) {
     const valueLink = this.getValueLink(newProps);
-    const newMuiTheme = nextContext.muiTheme ? nextContext.muiTheme : this.state.muiTheme;
+    const newState = {
+      muiTheme: nextContext.muiTheme || this.state.muiTheme,
+    };
 
     if (valueLink.value !== undefined) {
-      this.setState({selectedIndex: this._getSelectedIndex(newProps)});
+      newState.selectedIndex = this._getSelectedIndex(newProps);
     }
 
-    this.setState({muiTheme: newMuiTheme});
+    this.setState(newState);
   },
 
   getEvenWidth() {
@@ -130,6 +142,14 @@ const Tabs = React.createClass({
 
   getTabCount() {
     return React.Children.count(this.props.children);
+  },
+
+  // Do not use outside of this component, it will be removed once valueLink is deprecated
+  getValueLink(props) {
+    return props.valueLink || {
+      value: props.value,
+      requestChange: props.onChange,
+    };
   },
 
   _getSelectedIndex(props) {
@@ -180,26 +200,17 @@ const Tabs = React.createClass({
       ...other,
     } = this.props;
 
-    let themeVariables = this.state.muiTheme.tabs;
-    let styles = {
-      tabItemContainer: {
-        margin: 0,
-        padding: 0,
-        width: '100%',
-        height: 48,
-        backgroundColor: themeVariables.backgroundColor,
-        whiteSpace: 'nowrap',
-        display: 'table',
-      },
-    };
+    const {
+      prepareStyles,
+    } = this.state.muiTheme;
+
+    const styles = getStyles(this.props, this.state);
 
     let valueLink = this.getValueLink(this.props);
     let tabValue = valueLink.value;
     let tabContent = [];
 
-    let width = 100 / this.getTabCount() + '%';
-
-    let left = 'calc(' + width + '*' + this.state.selectedIndex + ')';
+    const width = 100 / this.getTabCount();
 
     let tabs = React.Children.map(children, (tab, index) => {
       warning(tab.type && tab.type.displayName === 'Tab',
@@ -221,15 +232,15 @@ const Tabs = React.createClass({
         key: index,
         selected: this._getSelected(tab, index),
         tabIndex: index,
-        width: width,
+        width: `${width}%`,
         onTouchTap: this._handleTabTouchTap,
       });
     });
 
     const inkBar = this.state.selectedIndex !== -1 ? (
       <InkBar
-        left={left}
-        width={width}
+        left={`${width * this.state.selectedIndex}%`}
+        width={`${width}%`}
         style={inkBarStyle}
       />
     ) : null;
@@ -240,15 +251,16 @@ const Tabs = React.createClass({
     return (
       <div
         {...other}
-        style={this.prepareStyles(style)}>
-        <div style={this.prepareStyles(styles.tabItemContainer, tabItemContainerStyle)}>
+        style={prepareStyles(Object.assign({}, style))}
+      >
+        <div style={prepareStyles(Object.assign(styles.tabItemContainer, tabItemContainerStyle))}>
           {tabs}
         </div>
         <div style={{width: inkBarContainerWidth}}>
          {inkBar}
         </div>
         <div
-          style={this.prepareStyles(contentContainerStyle)}
+          style={prepareStyles(Object.assign({}, contentContainerStyle))}
           className={contentContainerClassName}
         >
           {tabContent}

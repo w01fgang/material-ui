@@ -1,18 +1,14 @@
 import React from 'react';
-import StylePropable from '../mixins/style-propable';
 import WindowListenable from '../mixins/window-listenable';
 import TimePickerDialog from './time-picker-dialog';
 import TextField from '../text-field';
-import ThemeManager from '../styles/theme-manager';
-import DefaultRawTheme from '../styles/raw-themes/light-raw-theme';
+import getMuiTheme from '../styles/getMuiTheme';
 
-
-let emptyTime = new Date();
+const emptyTime = new Date();
 emptyTime.setHours(0);
 emptyTime.setMinutes(0);
 emptyTime.setSeconds(0);
 emptyTime.setMilliseconds(0);
-
 
 const TimePicker = React.createClass({
 
@@ -87,7 +83,7 @@ const TimePicker = React.createClass({
     muiTheme: React.PropTypes.object,
   },
 
-  mixins: [StylePropable, WindowListenable],
+  mixins: [WindowListenable],
 
   getDefaultProps() {
     return {
@@ -103,7 +99,7 @@ const TimePicker = React.createClass({
     return {
       time: this.props.defaultTime || emptyTime,
       dialogTime: new Date(),
-      muiTheme: this.context.muiTheme ? this.context.muiTheme : ThemeManager.getMuiTheme(DefaultRawTheme),
+      muiTheme: this.context.muiTheme || getMuiTheme(),
     };
   },
 
@@ -116,12 +112,12 @@ const TimePicker = React.createClass({
     let mins = date.getMinutes().toString();
 
     if (this.props.format === 'ampm') {
-      let isAM = hours < 12;
+      const isAM = hours < 12;
       hours = hours % 12;
-      let additional = isAM ? ' am' : ' pm';
+      const additional = isAM ? ' am' : ' pm';
       hours = (hours || 12).toString();
 
-      if (mins.length < 2 ) mins = '0' + mins;
+      if (mins.length < 2 ) mins = `0${mins}`;
 
       if (this.props.pedantic) {
         // Treat midday/midnight specially http://www.nist.gov/pml/div688/times.cfm
@@ -130,15 +126,15 @@ const TimePicker = React.createClass({
         }
       }
 
-      return hours + (mins === '00' ? '' : ':' + mins) + additional;
+      return hours + (mins === '00' ? '' : `:${mins}`) + additional;
     }
 
     hours = hours.toString();
 
-    if (hours.length < 2) hours = '0' + hours;
-    if (mins.length < 2) mins = '0' + mins;
+    if (hours.length < 2) hours = `0${hours}`;
+    if (mins.length < 2) mins = `0${mins}`;
 
-    return hours + ':' + mins;
+    return `${hours}:${mins}`;
   },
 
   getTime() {
@@ -195,17 +191,23 @@ const TimePicker = React.createClass({
       ...other,
     } = this.props;
 
-    const {time} = this.state;
+    const {
+      muiTheme: {
+        prepareStyles,
+      },
+      time,
+    } = this.state;
 
     return (
-      <div style={this.prepareStyles(style)}>
+      <div style={prepareStyles(Object.assign({}, style))}>
         <TextField
           {...other}
           style={textFieldStyle}
           ref="input"
           value={time === emptyTime ? null : this.formatTime(time)}
           onFocus={this._handleInputFocus}
-          onTouchTap={this._handleInputTouchTap} />
+          onTouchTap={this._handleInputTouchTap}
+        />
         <TimePickerDialog
           ref="dialogWindow"
           initialTime={this.state.dialogTime}
@@ -213,7 +215,8 @@ const TimePicker = React.createClass({
           onShow={onShow}
           onDismiss={onDismiss}
           format={format}
-          autoOk={autoOk} />
+          autoOk={autoOk}
+        />
       </div>
     );
   },

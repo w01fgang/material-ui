@@ -23,24 +23,17 @@ const RaisedButtonExampleComplex = () => (
   <div>
     <RaisedButton
       label="Choose an Image"
-      primary={true}
       style={styles.button}
     >
       <input type="file" style={styles.exampleImageInput} />
     </RaisedButton>
     <RaisedButton
-      label="Label after"
-      labelPosition="after"
-      secondary={true}
+      label="Label before"
+      labelPosition="before"
+      primary={true}
       icon={<ActionAndroid />}
       style={styles.button}
     />
-    <RaisedButton
-      label="Disabled"
-      disabled={true}
-      style={styles.button}
-    />
-    <br />
     <RaisedButton
       label="Github Link"
       linkButton={true}

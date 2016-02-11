@@ -5,13 +5,11 @@ import StylePropable from '../mixins/style-propable';
 import Transitions from '../styles/transitions';
 import UniqueId from '../utils/unique-id';
 import EnhancedTextarea from '../enhanced-textarea';
-import DefaultRawTheme from '../styles/raw-themes/light-raw-theme';
-import ThemeManager from '../styles/theme-manager';
+import getMuiTheme from '../styles/getMuiTheme';
 import ContextPure from '../mixins/context-pure';
 import TextFieldHint from './TextFieldHint';
 import TextFieldLabel from './TextFieldLabel';
 import TextFieldUnderline from './TextFieldUnderline';
-import warning from 'warning';
 
 /**
  * Check if a value is valid to be displayed inside an input.
@@ -85,6 +83,8 @@ const TextField = React.createClass({
 
     /**
      * Override the inline-styles of the TextField's input element.
+     * When multiLine is false: define the style of the input element.
+     * When multiLine is true: define the style of the container of the textarea.
      */
     inputStyle: React.PropTypes.object,
 
@@ -134,6 +134,13 @@ const TextField = React.createClass({
      * Override the inline-styles of the root element.
      */
     style: React.PropTypes.object,
+
+    /**
+     * Override the inline-styles of the TextField's textarea element.
+     * The TextField use either a textarea or an input,
+     * this property has effects only when multiLine is true.
+     */
+    textareaStyle: React.PropTypes.object,
 
     /**
      * Specifies the type of input to display
@@ -223,7 +230,7 @@ const TextField = React.createClass({
       errorText: this.props.errorText,
       hasValue: isValid(props.value) || isValid(props.defaultValue) ||
         (props.valueLink && isValid(props.valueLink.value)),
-      muiTheme: this.context.muiTheme ? this.context.muiTheme : ThemeManager.getMuiTheme(DefaultRawTheme),
+      muiTheme: this.context.muiTheme || getMuiTheme(),
     };
   },
 
@@ -233,7 +240,7 @@ const TextField = React.createClass({
     };
   },
 
-  componentDidMount() {
+  componentWillMount() {
     this._uniqueId = UniqueId.generate();
   },
 
@@ -246,16 +253,13 @@ const TextField = React.createClass({
       nextProps = nextProps.children.props;
     }
 
-    let hasValueLinkProp = nextProps.hasOwnProperty('valueLink');
-    let hasValueProp = nextProps.hasOwnProperty('value');
-    let hasNewDefaultValue = nextProps.defaultValue !== this.props.defaultValue;
+    const hasValueLinkProp = nextProps.hasOwnProperty('valueLink');
+    const hasValueProp = nextProps.hasOwnProperty('value');
 
     if (hasValueLinkProp) {
       newState.hasValue = isValid(nextProps.valueLink.value);
     } else if (hasValueProp) {
       newState.hasValue = isValid(nextProps.value);
-    } else if (hasNewDefaultValue) {
-      newState.hasValue = isValid(nextProps.defaultValue);
     }
 
     if (newState) this.setState(newState);
@@ -295,6 +299,7 @@ const TextField = React.createClass({
       },
       floatingLabel: {
         color: hintColor,
+        pointerEvents: 'none',
       },
       input: {
         tapHighlightColor: 'rgba(0,0,0,0)',
@@ -352,40 +357,12 @@ const TextField = React.createClass({
     if (this.isMounted()) this._getInputNode().blur();
   },
 
-  clearValue() {
-    this.setValue('');
-  },
-
   focus() {
     if (this.isMounted()) this._getInputNode().focus();
   },
 
   getValue() {
     return this.isMounted() ? this._getInputNode().value : undefined;
-  },
-
-  setErrorText(newErrorText) {
-    warning(false, 'setErrorText() method is deprecated. Use the errorText property instead.');
-
-    if (this.isMounted()) {
-      this.setState({errorText: newErrorText});
-    }
-  },
-
-  setValue(newValue) {
-    warning(false,
-      `setValue() method is deprecated. Use the defaultValue property instead.
-      Or use the TextField as a controlled component with the value property.`);
-
-    if (this.isMounted()) {
-      if (this.props.multiLine) {
-        this.refs.input.setValue(newValue);
-      } else {
-        this._getInputNode().value = newValue;
-      }
-
-      this.setState({hasValue: isValid(newValue)});
-    }
   },
 
   _getInputNode() {
@@ -418,7 +395,7 @@ const TextField = React.createClass({
   _handleTextAreaHeightChange(e, height) {
     let newHeight = height + 24;
     if (this.props.floatingLabelText) newHeight += 24;
-    ReactDOM.findDOMNode(this).style.height = newHeight + 'px';
+    ReactDOM.findDOMNode(this).style.height = `${newHeight}px`;
   },
 
   _isControlled() {
@@ -437,6 +414,7 @@ const TextField = React.createClass({
       hintText,
       hintStyle,
       id,
+      inputStyle,
       multiLine,
       onBlur,
       onChange,
@@ -449,12 +427,13 @@ const TextField = React.createClass({
       underlineStyle,
       rows,
       rowsMax,
+      textareaStyle,
       ...other,
     } = this.props;
 
     let styles = this.getStyles();
 
-    let inputId = id || this._uniqueId;
+    const inputId = id || this._uniqueId;
 
     let errorTextElement = this.state.errorText ? (
       <div style={this.prepareStyles(styles.error)}>{this.state.errorText}</div>
@@ -467,7 +446,7 @@ const TextField = React.createClass({
         htmlFor={inputId}
         shrink={this.state.hasValue || this.state.isFocused}
         disabled={disabled}
-        onTouchTap={this.focus}>
+      >
         {floatingLabelText}
       </TextFieldLabel>
     ) : null;
@@ -483,7 +462,9 @@ const TextField = React.createClass({
       disabled: this.props.disabled,
       onKeyDown: this._handleInputKeyDown,
     };
-    const inputStyle = this.mergeStyles(styles.input, this.props.inputStyle);
+
+    const inputStyleMerged = this.mergeStyles(styles.input, inputStyle);
+    const textareaStyleMerged = this.mergeStyles(styles.textarea, textareaStyle);
 
     if (!this.props.hasOwnProperty('valueLink')) {
       inputProps.onChange = this._handleInputChange;
@@ -494,24 +475,26 @@ const TextField = React.createClass({
         {
           ...inputProps,
           ...this.props.children.props,
-          style: this.mergeStyles(inputStyle, this.props.children.props.style),
+          style: this.mergeStyles(inputStyleMerged, this.props.children.props.style),
         });
     } else {
       inputElement = multiLine ? (
         <EnhancedTextarea
           {...other}
           {...inputProps}
-          style={inputStyle}
+          style={inputStyleMerged}
           rows={rows}
           rowsMax={rowsMax}
           onHeightChange={this._handleTextAreaHeightChange}
-          textareaStyle={styles.textarea} />
+          textareaStyle={textareaStyleMerged}
+        />
       ) : (
         <input
           {...other}
           {...inputProps}
-          style={this.prepareStyles(inputStyle)}
-          type={type} />
+          style={this.prepareStyles(inputStyleMerged)}
+          type={type}
+        />
       );
     }
 

@@ -1,4 +1,6 @@
 import React from 'react';
+import Title from 'react-title-component';
+
 import GridList from 'material-ui/lib/grid-list/grid-list';
 import GridTile from 'material-ui/lib/grid-list/grid-tile';
 
@@ -32,18 +34,25 @@ const appList = [
     title: 'Syncano',
     author: 'Syncano',
     img: 'images/showcase/syncano.png',
-    link: 'https://dashboard.syncano.io/',
+    link: 'https://syncano.io/',
   },
   {
-    title: 'Watson explorer',
-    author: 'IBM',
-    img: 'images/showcase/ibm.png',
-    link: 'http://reactmuiwat.mybluemix.net/',
+    title: 'Cloudcraft',
+    author: 'Cloudcraft',
+    img: 'images/showcase/cloudcraft.png',
+    link: 'https://cloudcraft.co/',
+  },
+  {
+    title: 'It\'s quiz',
+    author: 'It\'s quiz',
+    img: 'images/showcase/itsquiz.png',
+    link: 'http://itsquiz.com/',
   },
 ];
 
 const Showcase = () => (
   <div>
+    <Title render={(previousTitle) => `Showcase - ${previousTitle}`} />
     <MarkdownElement text={showcaseText} />
     <GridList
       cols={3}

@@ -1,11 +1,24 @@
 import React from 'react';
-import StylePropable from '../mixins/style-propable';
 import TextField from '../text-field';
 import DropDownMenu from '../DropDownMenu';
-import DefaultRawTheme from '../styles/raw-themes/light-raw-theme';
-import ThemeManager from '../styles/theme-manager';
+import getMuiTheme from '../styles/getMuiTheme';
 import ContextPure from '../mixins/context-pure';
-import deprecated from '../utils/deprecatedPropType';
+
+function getStyles(props) {
+  return {
+    label: {
+      paddingLeft: 0,
+      top: props.floatingLabelText ? 6 : -4,
+    },
+    icon: {
+      right: 0,
+      top: props.floatingLabelText ? 22 : 14,
+    },
+    hideDropDownUnderline: {
+      borderTop: 'none',
+    },
+  };
+}
 
 const SelectField = React.createClass({
 
@@ -71,22 +84,9 @@ const SelectField = React.createClass({
     iconStyle: React.PropTypes.object,
 
     /**
-     * `SelectField` will use text as default value,
-     * with this property you can choose another name.
-     */
-    labelMember: deprecated(React.PropTypes.string,
-      'to promote composability.'),
-
-    /**
      * Overrides the styles of label when the `SelectField` is inactive.
      */
     labelStyle: React.PropTypes.object,
-
-    /**
-     * JSON data representing all menu items in the dropdown.
-     */
-    menuItems: deprecated(React.PropTypes.array,
-      'to promote composability.'),
 
     /**
      * Callback function that is fired when the `SelectField` loses focus.
@@ -107,12 +107,6 @@ const SelectField = React.createClass({
      * The style object to use to override the `DropDownMenu`.
      */
     selectFieldRoot: React.PropTypes.object, // Must be changed!
-
-    /**
-     * Index of the item selected.
-     */
-    selectedIndex: deprecated(React.PropTypes.number,
-      'with menuItems.'),
 
     /**
      * Override the inline-styles of the root element.
@@ -144,13 +138,11 @@ const SelectField = React.createClass({
     muiTheme: React.PropTypes.object,
   },
 
-  //for passing default theme context to children
   childContextTypes: {
     muiTheme: React.PropTypes.object,
   },
 
   mixins: [
-    StylePropable,
     ContextPure,
   ],
 
@@ -173,7 +165,7 @@ const SelectField = React.createClass({
 
   getInitialState() {
     return {
-      muiTheme: this.context.muiTheme ? this.context.muiTheme : ThemeManager.getMuiTheme(DefaultRawTheme),
+      muiTheme: this.context.muiTheme || getMuiTheme(),
     };
   },
 
@@ -183,33 +175,13 @@ const SelectField = React.createClass({
     };
   },
 
-  //to update theme inside state whenever a new theme is passed down
-  //from the parent / owner using context
   componentWillReceiveProps(nextProps, nextContext) {
-    let newMuiTheme = nextContext.muiTheme ? nextContext.muiTheme : this.state.muiTheme;
-    this.setState({muiTheme: newMuiTheme});
-  },
-
-  getStyles() {
-    const {floatingLabelText} = this.props;
-
-    return {
-      label: {
-        paddingLeft: 0,
-        top: floatingLabelText ? 6 : -4,
-      },
-      icon: {
-        right: 0,
-        top: floatingLabelText ? 22 : 14,
-      },
-      hideDropDownUnderline: {
-        borderTop: 'none',
-      },
-    };
+    this.setState({
+      muiTheme: nextContext.muiTheme || this.state.muiTheme,
+    });
   },
 
   render() {
-    const styles = this.getStyles();
     const {
       autoWidth,
       children,
@@ -235,6 +207,8 @@ const SelectField = React.createClass({
       ...other,
     } = this.props;
 
+    const styles = getStyles(this.props, this.state);
+
     return (
       <TextField
         style={style}
@@ -254,8 +228,8 @@ const SelectField = React.createClass({
         <DropDownMenu
           disabled={disabled}
           style={selectFieldRoot}
-          labelStyle={this.mergeStyles(styles.label, labelStyle)}
-          iconStyle={this.mergeStyles(styles.icon, iconStyle)}
+          labelStyle={Object.assign(styles.label, labelStyle)}
+          iconStyle={Object.assign(styles.icon, iconStyle)}
           underlineStyle={styles.hideDropDownUnderline}
           autoWidth={autoWidth}
           value={value}

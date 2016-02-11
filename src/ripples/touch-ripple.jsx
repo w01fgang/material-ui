@@ -2,7 +2,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
 import ReactTransitionGroup from 'react-addons-transition-group';
-import StylePropable from '../mixins/style-propable';
 import Dom from '../utils/dom';
 import CircleRipple from './circle-ripple';
 import update from 'react-addons-update';
@@ -22,6 +21,13 @@ const TouchRipple = React.createClass({
     centerRipple: React.PropTypes.bool,
     children: React.PropTypes.node,
     color: React.PropTypes.string,
+
+    /**
+     * @ignore
+     * The material-ui theme applied to this component.
+     */
+    muiTheme: React.PropTypes.object.isRequired,
+
     opacity: React.PropTypes.number,
 
     /**
@@ -32,7 +38,6 @@ const TouchRipple = React.createClass({
 
   mixins: [
     PureRenderMixin,
-    StylePropable,
   ],
 
   getInitialState() {
@@ -53,6 +58,8 @@ const TouchRipple = React.createClass({
   },
 
   start(e, isRippleTouchGenerated) {
+    const theme = this.props.muiTheme.ripple;
+
     if (this._ignoreNextMouseDown && !isRippleTouchGenerated) {
       this._ignoreNextMouseDown = false;
       return;
@@ -64,10 +71,12 @@ const TouchRipple = React.createClass({
     ripples = push(ripples, (
       <CircleRipple
         key={this.state.nextKey}
+        muiTheme={this.props.muiTheme}
         style={!this.props.centerRipple ? this._getRippleStyle(e) : {}}
-        color={this.props.color}
+        color={this.props.color || theme.color}
         opacity={this.props.opacity}
-        touchGenerated={isRippleTouchGenerated} />
+        touchGenerated={isRippleTouchGenerated}
+      />
     ));
 
     this._ignoreNextMouseDown = isRippleTouchGenerated;
@@ -128,10 +137,10 @@ const TouchRipple = React.createClass({
     const left = pointerX - rippleRadius;
     const top = pointerY - rippleRadius;
 
-    style.height = rippleSize + 'px';
-    style.width = rippleSize + 'px';
-    style.top = top + 'px';
-    style.left = left + 'px';
+    style.height = `${rippleSize}px`;
+    style.width = `${rippleSize}px`;
+    style.top = `${top}px`;
+    style.left = `${left}px`;
 
     return style;
   },
@@ -144,6 +153,9 @@ const TouchRipple = React.createClass({
   render() {
     const {
       children,
+      muiTheme: {
+        prepareStyles,
+      },
       style,
     } = this.props;
 
@@ -154,7 +166,7 @@ const TouchRipple = React.createClass({
 
     let rippleGroup;
     if (hasRipples) {
-      const mergedStyles = this.mergeStyles({
+      const mergedStyles = Object.assign({
         height: '100%',
         width: '100%',
         position: 'absolute',
@@ -164,7 +176,7 @@ const TouchRipple = React.createClass({
       }, style);
 
       rippleGroup = (
-        <ReactTransitionGroup style={this.prepareStyles(mergedStyles)}>
+        <ReactTransitionGroup style={prepareStyles(mergedStyles)}>
           {ripples}
         </ReactTransitionGroup>
       );
@@ -176,7 +188,8 @@ const TouchRipple = React.createClass({
         onMouseDown={this._handleMouseDown}
         onMouseLeave={this._handleMouseLeave}
         onTouchStart={this._handleTouchStart}
-        onTouchEnd={this._handleTouchEnd}>
+        onTouchEnd={this._handleTouchEnd}
+      >
         {rippleGroup}
         {children}
       </div>

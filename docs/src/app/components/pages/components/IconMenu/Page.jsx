@@ -1,4 +1,6 @@
 import React from 'react';
+import Title from 'react-title-component';
+
 import CodeExample from '../../../CodeExample';
 import PropTypeDescription from '../../../PropTypeDescription';
 import MarkdownElement from '../../../MarkdownElement';
@@ -12,16 +14,36 @@ import iconMenuExampleControlledCode from '!raw!./ExampleControlled';
 import IconMenuExampleScrollable from './ExampleScrollable';
 import iconMenuExampleScrollableCode from '!raw!./ExampleScrollable';
 
+const descriptions = {
+  simple: 'Simple Icon Menus demonstrating some of the layouts possible using the `anchorOrigin` and `' +
+  'targetOrigin` properties.',
+  controlled: 'Two controlled examples, the first allowing a single selection, the second multiple selections.',
+  scrollable: 'The `maxHeight` property limits the height of the menu, above which it will be scrollable.',
+};
+
 const IconMenusPage = () => (
   <div>
+    <Title render={(previousTitle) => `Icon Menu - ${previousTitle}`} />
     <MarkdownElement text={iconMenuReadmeText} />
-    <CodeExample code={iconMenuExampleSimpleCode}>
+    <CodeExample
+      title="Icon Menu positioning"
+      description={descriptions.simple}
+      code={iconMenuExampleSimpleCode}
+    >
       <IconMenuExampleSimple />
     </CodeExample>
-    <CodeExample code={iconMenuExampleControlledCode}>
+    <CodeExample
+      title="Controlled Icon Menus"
+      description={descriptions.controlled}
+      code={iconMenuExampleControlledCode}
+    >
       <IconMenuExampleControlled />
     </CodeExample>
-    <CodeExample code={iconMenuExampleScrollableCode}>
+    <CodeExample
+      title="Scrollable Icon Menu"
+      description={descriptions.scrollable}
+      code={iconMenuExampleScrollableCode}
+    >
       <IconMenuExampleScrollable />
     </CodeExample>
     <PropTypeDescription code={iconMenuCode} />

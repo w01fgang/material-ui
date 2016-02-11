@@ -3,17 +3,14 @@ import ContextPure from './mixins/context-pure';
 import Transitions from './styles/transitions';
 import Children from './utils/children';
 import ColorManipulator from './utils/color-manipulator';
-import {mergeStyles} from './utils/styles';
 import Typography from './styles/typography';
 import EnhancedButton from './enhanced-button';
 import FlatButtonLabel from './buttons/flat-button-label';
-import DefaultRawTheme from './styles/raw-themes/light-raw-theme';
-import ThemeManager from './styles/theme-manager';
+import getMuiTheme from './styles/getMuiTheme';
 
 function validateLabel(props, propName, componentName) {
   if (!props.children && !props.label) {
-    return new Error('Required prop label or children was not ' +
-      'specified in ' + componentName + '.');
+    return new Error(`Required prop label or children was not specified in ${componentName}.`);
   }
 }
 
@@ -26,8 +23,13 @@ const FlatButton = React.createClass({
     backgroundColor: React.PropTypes.string,
 
     /**
-     * Elements passed into the button. For example, the font
-     * icon passed into the GitHub button.
+     * This is what will be displayed inside the button.
+     * If a label is specified, the text within the label prop will
+     * be displayed. Otherwise, the component will expect children
+     * which will then be displayed. (In our example,
+     * we are nesting an `<input type="file" />` and a `span`
+     * that acts as our label to be displayed.) This only
+     * applies to flat and raised buttons.
      */
     children: React.PropTypes.node,
 
@@ -40,6 +42,11 @@ const FlatButton = React.createClass({
      * Color of button when mouse hovers over.
      */
     hoverColor: React.PropTypes.string,
+
+    /**
+     * URL to link to when button clicked if `linkButton` is set to true.
+     */
+    href: React.PropTypes.string,
 
     /**
      * Use this property to display an icon.
@@ -63,6 +70,11 @@ const FlatButton = React.createClass({
      * Override the inline-styles of the button's label element.
      */
     labelStyle: React.PropTypes.object,
+
+    /**
+     * Enables use of `href` property to provide a URL to link to if set to true.
+     */
+    linkButton: React.PropTypes.bool,
 
     /**
      * Called when element is focused by the keyboard.
@@ -150,8 +162,7 @@ const FlatButton = React.createClass({
     return {
       disabled: false,
       labelStyle: {},
-      // labelPosition Should be after but we keep it like for now (prevent breaking changes)
-      labelPosition: 'before',
+      labelPosition: 'after',
       onKeyboardFocus: () => {},
       onMouseEnter: () => {},
       onMouseLeave: () => {},
@@ -166,7 +177,7 @@ const FlatButton = React.createClass({
       hovered: false,
       isKeyboardFocused: false,
       touch: false,
-      muiTheme: this.context.muiTheme ? this.context.muiTheme : ThemeManager.getMuiTheme(DefaultRawTheme),
+      muiTheme: this.context.muiTheme || getMuiTheme(),
     };
   },
 
@@ -245,7 +256,7 @@ const FlatButton = React.createClass({
     const buttonBackgroundColor = backgroundColor || buttonColor;
     const hovered = (this.state.hovered || this.state.isKeyboardFocused) && !disabled;
 
-    const mergedRootStyles = mergeStyles({
+    const mergedRootStyles = Object.assign({}, {
       color: defaultTextColor,
       transition: Transitions.easeOut(),
       fontSize: Typography.fontStyleButtonFontSize,
@@ -257,16 +268,14 @@ const FlatButton = React.createClass({
       position: 'relative',
       overflow: 'hidden',
       backgroundColor: hovered ? buttonHoverColor : buttonBackgroundColor,
-      lineHeight: buttonHeight + 'px',
+      lineHeight: `${buttonHeight}px`,
       minWidth: buttonMinWidth,
       padding: 0,
       margin: 0,
-      //This is need so that ripples do not bleed past border radius.
-      //See: http://stackoverflow.com/questions/17298739
-      transform: 'translate3d(0, 0, 0)',
     }, style);
 
     let iconCloned;
+    const labelStyleIcon = {};
 
     if (icon) {
       iconCloned = React.cloneElement(icon, {
@@ -279,14 +288,14 @@ const FlatButton = React.createClass({
       });
 
       if (labelPosition === 'before') {
-        labelStyle.paddingRight = 8;
+        labelStyleIcon.paddingRight = 8;
       } else {
-        labelStyle.paddingLeft = 8;
+        labelStyleIcon.paddingLeft = 8;
       }
     }
 
     const labelElement = label ? (
-      <FlatButtonLabel label={label} style={labelStyle} />
+      <FlatButtonLabel label={label} style={Object.assign({}, labelStyleIcon, labelStyle)} />
     ) : undefined;
 
     // Place label before or after children.
@@ -316,7 +325,8 @@ const FlatButton = React.createClass({
         onTouchStart={this._handleTouchStart}
         style={mergedRootStyles}
         touchRippleColor={buttonRippleColor}
-        touchRippleOpacity={0.3} >
+        touchRippleOpacity={0.3}
+      >
         {enhancedButtonChildren}
       </EnhancedButton>
     );

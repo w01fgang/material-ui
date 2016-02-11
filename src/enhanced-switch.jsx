@@ -9,8 +9,7 @@ import ClearFix from './clearfix';
 import FocusRipple from './ripples/focus-ripple';
 import TouchRipple from './ripples/touch-ripple';
 import Paper from './paper';
-import DefaultRawTheme from './styles/raw-themes/light-raw-theme';
-import ThemeManager from './styles/theme-manager';
+import getMuiTheme from './styles/getMuiTheme';
 import warning from 'warning';
 
 const EnhancedSwitch = React.createClass({
@@ -28,6 +27,7 @@ const EnhancedSwitch = React.createClass({
     disabled: React.PropTypes.bool,
     iconStyle: React.PropTypes.object,
     id: React.PropTypes.string,
+    inputStyle: React.PropTypes.object,
     inputType: React.PropTypes.string.isRequired,
     label: React.PropTypes.node,
     labelPosition: React.PropTypes.oneOf(['left', 'right']),
@@ -75,7 +75,7 @@ const EnhancedSwitch = React.createClass({
     return {
       isKeyboardFocused: false,
       parentWidth: 100,
-      muiTheme: this.context.muiTheme ? this.context.muiTheme : ThemeManager.getMuiTheme(DefaultRawTheme),
+      muiTheme: this.context.muiTheme || getMuiTheme(),
     };
   },
 
@@ -362,7 +362,7 @@ const EnhancedSwitch = React.createClass({
     const inputProps = {
       ref: 'checkbox',
       type: this.props.inputType,
-      style: this.prepareStyles(styles.input),
+      style: this.prepareStyles(styles.input, this.props.inputStyle),
       name: this.props.name,
       value: this.props.value,
       defaultChecked: this.props.defaultSwitched,
@@ -387,7 +387,8 @@ const EnhancedSwitch = React.createClass({
     let inputElement = (
       <input
         {...other}
-        {...inputProps}/>
+        {...inputProps}
+      />
     );
 
     let touchRipple = (
@@ -396,7 +397,9 @@ const EnhancedSwitch = React.createClass({
         key="touchRipple"
         style={rippleStyle}
         color={rippleColor}
-        centerRipple={true} />
+        muiTheme={this.state.muiTheme}
+        centerRipple={true}
+      />
     );
 
     let focusRipple = (
@@ -404,7 +407,9 @@ const EnhancedSwitch = React.createClass({
         key="focusRipple"
         innerStyle={rippleStyle}
         color={rippleColor}
-        show={this.state.isKeyboardFocused} />
+        muiTheme={this.state.muiTheme}
+        show={this.state.isKeyboardFocused}
+      />
     );
 
     let ripples = [
@@ -444,8 +449,8 @@ const EnhancedSwitch = React.createClass({
 
     return (
       <div ref="root" className={className} style={this.prepareStyles(styles.root, this.props.style)}>
-          {inputElement}
-          {elementsInOrder}
+        {inputElement}
+        {elementsInOrder}
       </div>
     );
   },

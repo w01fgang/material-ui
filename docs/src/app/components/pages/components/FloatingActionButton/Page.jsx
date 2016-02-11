@@ -1,4 +1,6 @@
 import React from 'react';
+import Title from 'react-title-component';
+
 import CodeExample from '../../../CodeExample';
 import PropTypeDescription from '../../../PropTypeDescription';
 import MarkdownElement from '../../../MarkdownElement';
@@ -7,17 +9,18 @@ import floatingButtonCode from '!raw!material-ui/lib/floating-action-button';
 import floatingButtonReadmeText from './README';
 import floatingButtonExampleSimpleCode from '!raw!./ExampleSimple';
 import FloatingButtonExampleSimple from './ExampleSimple';
-import floatingButtonExampleComplexCode from '!raw!./ExampleComplex';
-import FloatingButtonExampleComplex from './ExampleComplex';
+
+
+const descriptions = {
+  simple: 'Default size and `mini` FABs, in primary (default), `secondary` and `disabled` colors.',
+};
 
 const FloatingActionButtonPage = () => (
   <div>
+    <Title render={(previousTitle) => `Floating Action Button - ${previousTitle}`} />
     <MarkdownElement text={floatingButtonReadmeText} />
-    <CodeExample code={floatingButtonExampleSimpleCode}>
+    <CodeExample description={descriptions.simple} code={floatingButtonExampleSimpleCode}>
       <FloatingButtonExampleSimple />
-    </CodeExample>
-    <CodeExample code={floatingButtonExampleComplexCode}>
-      <FloatingButtonExampleComplex />
     </CodeExample>
     <PropTypeDescription code={floatingButtonCode} />
   </div>

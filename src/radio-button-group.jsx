@@ -1,8 +1,6 @@
 import React from 'react';
 import RadioButton from './radio-button';
-import StylePropable from './mixins/style-propable';
-import DefaultRawTheme from './styles/raw-themes/light-raw-theme';
-import ThemeManager from './styles/theme-manager';
+import getMuiTheme from './styles/getMuiTheme';
 import warning from 'warning';
 
 const RadioButtonGroup = React.createClass({
@@ -60,14 +58,9 @@ const RadioButtonGroup = React.createClass({
     muiTheme: React.PropTypes.object,
   },
 
-  //for passing default theme context to children
   childContextTypes: {
     muiTheme: React.PropTypes.object,
   },
-
-  mixins: [
-    StylePropable,
-  ],
 
   getDefaultProps() {
     return {
@@ -79,7 +72,7 @@ const RadioButtonGroup = React.createClass({
     return {
       numberCheckedRadioButtons: 0,
       selected: this.props.valueSelected || this.props.defaultSelected || '',
-      muiTheme: this.context.muiTheme ? this.context.muiTheme : ThemeManager.getMuiTheme(DefaultRawTheme),
+      muiTheme: this.context.muiTheme || getMuiTheme(),
     };
   },
 
@@ -100,8 +93,7 @@ const RadioButtonGroup = React.createClass({
   },
 
   componentWillReceiveProps(nextProps, nextContext) {
-    let newMuiTheme = nextContext.muiTheme ? nextContext.muiTheme : this.state.muiTheme;
-    let newState = {muiTheme: newMuiTheme};
+    let newState = {muiTheme: nextContext.muiTheme || this.state.muiTheme};
 
     if (nextProps.hasOwnProperty('valueSelected')) {
       newState.selected = nextProps.valueSelected;
@@ -146,6 +138,10 @@ const RadioButtonGroup = React.createClass({
   },
 
   render() {
+    const {
+      prepareStyles,
+    } = this.state.muiTheme;
+
     let options = React.Children.map(this.props.children, (option) => {
       let {
         name,
@@ -172,8 +168,9 @@ const RadioButtonGroup = React.createClass({
 
     return (
       <div
-        style={this.prepareStyles(this.props.style)}
-        className={this.props.className}>
+        style={prepareStyles(Object.assign({}, this.props.style))}
+        className={this.props.className}
+      >
         {options}
       </div>
     );

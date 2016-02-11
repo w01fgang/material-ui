@@ -1,14 +1,12 @@
 import React from 'react';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
-import StylePropable from './mixins/style-propable';
 import Colors from './styles/colors';
 import Children from './utils/children';
 import Events from './utils/events';
 import KeyCode from './utils/key-code';
 import FocusRipple from './ripples/focus-ripple';
 import TouchRipple from './ripples/touch-ripple';
-import DefaultRawTheme from './styles/raw-themes/light-raw-theme';
-import ThemeManager from './styles/theme-manager';
+import getMuiTheme from './styles/getMuiTheme';
 
 let styleInjected = false;
 let listening = false;
@@ -78,12 +76,11 @@ const EnhancedButton = React.createClass({
     muiTheme: React.PropTypes.object,
   },
 
-  //for passing default theme context to children
   childContextTypes: {
     muiTheme: React.PropTypes.object,
   },
 
-  mixins: [PureRenderMixin, StylePropable],
+  mixins: [PureRenderMixin],
 
   getDefaultProps() {
     return {
@@ -104,7 +101,7 @@ const EnhancedButton = React.createClass({
       isKeyboardFocused: !this.props.disabled &&
         this.props.keyboardFocused &&
         !this.props.disableKeyboardFocus,
-      muiTheme: this.context.muiTheme ? this.context.muiTheme : ThemeManager.getMuiTheme(DefaultRawTheme),
+      muiTheme: this.context.muiTheme || getMuiTheme(),
     };
   },
 
@@ -120,8 +117,9 @@ const EnhancedButton = React.createClass({
   },
 
   componentWillReceiveProps(nextProps, nextContext) {
-    let newMuiTheme = nextContext.muiTheme ? nextContext.muiTheme : this.state.muiTheme;
-    this.setState({muiTheme: newMuiTheme});
+    this.setState({
+      muiTheme: nextContext.muiTheme || this.state.muiTheme,
+    });
 
     if ((nextProps.disabled || nextProps.disableKeyboardFocus) &&
       this.state.isKeyboardFocused) {
@@ -176,6 +174,7 @@ const EnhancedButton = React.createClass({
     const focusRipple = isKeyboardFocused && !disabled && !disableFocusRipple && !disableKeyboardFocus ? (
       <FocusRipple
         color={focusRippleColor}
+        muiTheme={this.state.muiTheme}
         opacity={focusRippleOpacity}
         show={isKeyboardFocused}
       />
@@ -186,7 +185,9 @@ const EnhancedButton = React.createClass({
       <TouchRipple
         centerRipple={centerRipple}
         color={touchRippleColor}
-        opacity={touchRippleOpacity}>
+        muiTheme={this.state.muiTheme}
+        opacity={touchRippleOpacity}
+      >
         {children}
       </TouchRipple>
     ) : undefined;
@@ -208,10 +209,10 @@ const EnhancedButton = React.createClass({
   },
 
   _handleKeyUp(e) {
-    if (!this.props.disabled &&
-      e.keyCode === KeyCode.SPACE &&
-      this.state.isKeyboardFocused) {
-      this._handleTouchTap(e);
+    if (!this.props.disabled && !this.props.disableKeyboardFocus) {
+      if (e.keyCode === KeyCode.SPACE && this.state.isKeyboardFocused) {
+        this._handleTouchTap(e);
+      }
     }
     this.props.onKeyUp(e);
   },
@@ -271,7 +272,11 @@ const EnhancedButton = React.createClass({
       ...other,
     } = this.props;
 
-    const mergedStyles = this.mergeStyles({
+    const {
+      prepareStyles,
+    } = this.state.muiTheme;
+
+    const mergedStyles = Object.assign({
       border: 10,
       background: 'none',
       boxSizing: 'border-box',
@@ -283,13 +288,22 @@ const EnhancedButton = React.createClass({
       cursor: disabled ? 'default' : 'pointer',
       textDecoration: 'none',
       outline: 'none',
+      /*
+        This is needed so that ripples do not bleed
+        past border radius.
+        See: http://stackoverflow.com/questions/17298739/
+          css-overflow-hidden-not-working-in-chrome-when-parent-has-border-radius-and-chil
+       */
+      transform: disableTouchRipple && disableFocusRipple ? null : 'translate3d(0, 0, 0)',
+      verticalAlign: other.hasOwnProperty('href') ? 'middle' : null,
     }, style);
 
     if (disabled && linkButton) {
       return (
         <span
           {...other}
-          style={mergedStyles}>
+          style={mergedStyles}
+        >
           {children}
         </span>
       );
@@ -297,7 +311,7 @@ const EnhancedButton = React.createClass({
 
     const buttonProps = {
       ...other,
-      style: this.prepareStyles(mergedStyles),
+      style: prepareStyles(mergedStyles),
       disabled: disabled,
       onBlur: this._handleBlur,
       onFocus: this._handleFocus,
