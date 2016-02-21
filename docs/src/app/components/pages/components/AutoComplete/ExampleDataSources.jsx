@@ -31,11 +31,11 @@ const AutoCompleteExampleNoFilter = () => (
       hintText="text-value data"
       filter={AutoComplete.noFilter}
       dataSource={dataSource1}
-    /><br/>
+    /><br />
     <AutoComplete
       floatingLabelText="showAllItems"
       filter={AutoComplete.noFilter}
-      triggerUpdateOnFocus={true}
+      openOnFocus={true}
       dataSource={dataSource2}
     />
   </div>

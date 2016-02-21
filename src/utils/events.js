@@ -1,10 +1,10 @@
 export default {
 
   once(el, type, callback) {
-    let typeArray = type ? type.split(' ') : [];
-    let recursiveFunction = (e) => {
-      e.target.removeEventListener(e.type, recursiveFunction);
-      return callback(e);
+    const typeArray = type ? type.split(' ') : [];
+    const recursiveFunction = (event) => {
+      event.target.removeEventListener(event.type, recursiveFunction);
+      return callback(event);
     };
 
     for (let i = typeArray.length - 1; i >= 0; i--) {
@@ -32,11 +32,11 @@ export default {
     }
   },
 
-  isKeyboard(e) {
+  isKeyboard(event) {
     return [
       'keydown',
       'keypress',
       'keyup',
-    ].indexOf(e.type) !== -1;
+    ].indexOf(event.type) !== -1;
   },
 };

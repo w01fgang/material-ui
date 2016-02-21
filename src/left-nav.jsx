@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import KeyCode from './utils/key-code';
+import EventListener from 'react-event-listener';
+import keycode from 'keycode';
 import autoPrefix from './styles/auto-prefix';
 import Transitions from './styles/transitions';
-import WindowListenable from './mixins/window-listenable';
 import Overlay from './overlay';
 import Paper from './paper';
 import getMuiTheme from './styles/getMuiTheme';
@@ -22,6 +22,16 @@ const LeftNav = React.createClass({
      * The css class name of the root element.
      */
     className: React.PropTypes.string,
+
+    /**
+     * The css class name of the container element.
+     */
+    containerClassName: React.PropTypes.string,
+
+    /**
+     * Override the inline-styles of the container element.
+     */
+    containerStyle: React.PropTypes.object,
 
     /**
      * Indicates whether swiping sideways when the `LeftNav` is closed should open it.
@@ -92,10 +102,6 @@ const LeftNav = React.createClass({
     muiTheme: React.PropTypes.object,
   },
 
-  mixins: [
-    WindowListenable,
-  ],
-
   getDefaultProps() {
     return {
       disableSwipeToOpen: false,
@@ -150,10 +156,6 @@ const LeftNav = React.createClass({
     this._disableSwipeHandling();
   },
 
-  windowListeners: {
-    keyup: '_onWindowKeyUp',
-  },
-
   getStyles() {
     const muiTheme = this.state.muiTheme;
     const theme = muiTheme.leftNav;
@@ -172,6 +174,7 @@ const LeftNav = React.createClass({
         transition: !this.state.swiping && Transitions.easeOut(null, 'transform', null),
         backgroundColor: theme.color,
         overflow: 'auto',
+        WebkitOverflowScrolling: 'touch', // iOS momentum scrolling
       },
       overlay: {
         zIndex: muiTheme.zIndex.leftNavOverlay,
@@ -202,13 +205,13 @@ const LeftNav = React.createClass({
     return this;
   },
 
-  _onOverlayTouchTap(event) {
+  handleTouchTapOverlay(event) {
     event.preventDefault();
     this._close('clickaway');
   },
 
-  _onWindowKeyUp(e) {
-    if (e.keyCode === KeyCode.ESC &&
+  _onWindowKeyUp(event) {
+    if (keycode(event) === 'esc' &&
         !this.props.docked &&
         this.state.open) {
       this._close('escape');
@@ -242,12 +245,12 @@ const LeftNav = React.createClass({
     }
   },
 
-  _onBodyTouchStart(e) {
+  _onBodyTouchStart(event) {
 
     const swipeAreaWidth = this.props.swipeAreaWidth;
 
-    const touchStartX = e.touches[0].pageX;
-    const touchStartY = e.touches[0].pageY;
+    const touchStartX = event.touches[0].pageX;
+    const touchStartY = event.touches[0].pageY;
 
     // Open only if swiping from far left (or right) while closed
     if (swipeAreaWidth !== null && !this.state.open) {
@@ -295,12 +298,12 @@ const LeftNav = React.createClass({
            );
   },
 
-  _onBodyTouchMove(e) {
-    const currentX = e.touches[0].pageX;
-    const currentY = e.touches[0].pageY;
+  _onBodyTouchMove(event) {
+    const currentX = event.touches[0].pageX;
+    const currentY = event.touches[0].pageY;
 
     if (this.state.swiping) {
-      e.preventDefault();
+      event.preventDefault();
       this._setPosition(this._getTranslateX(currentX));
     } else if (this._maybeSwiping) {
       const dXAbs = Math.abs(currentX - this._touchStartX);
@@ -322,9 +325,9 @@ const LeftNav = React.createClass({
     }
   },
 
-  _onBodyTouchEnd(e) {
+  _onBodyTouchEnd(event) {
     if (this.state.swiping) {
-      const currentX = e.changedTouches[0].pageX;
+      const currentX = event.changedTouches[0].pageX;
       const translateRatio = this._getTranslateX(currentX) / this._getMaxTranslateX();
 
       this._maybeSwiping = false;
@@ -361,6 +364,8 @@ const LeftNav = React.createClass({
     const {
       children,
       className,
+      containerClassName,
+      containerStyle,
       docked,
       openRight,
       overlayClassName,
@@ -379,21 +384,25 @@ const LeftNav = React.createClass({
           className={overlayClassName}
           style={Object.assign(styles.overlay, overlayStyle)}
           transitionEnabled={!this.state.swiping}
-          onTouchTap={this._onOverlayTouchTap}
+          onTouchTap={this.handleTouchTapOverlay}
         />
       );
     }
 
     return (
-      <div>
+      <div
+        className={className}
+        style={style}
+      >
+        <EventListener elementName="window" onKeyUp={this._onWindowKeyUp} />
         {overlay}
         <Paper
           ref="clickAwayableElement"
           zDepth={2}
           rounded={false}
           transitionEnabled={!this.state.swiping}
-          className={className}
-          style={Object.assign(styles.root, openRight && styles.rootWhenOpenRight, style)}
+          className={containerClassName}
+          style={Object.assign(styles.root, openRight && styles.rootWhenOpenRight, containerStyle)}
         >
           {children}
         </Paper>

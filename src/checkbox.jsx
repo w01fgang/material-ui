@@ -4,6 +4,7 @@ import Transitions from './styles/transitions';
 import CheckboxOutline from './svg-icons/toggle/check-box-outline-blank';
 import CheckboxChecked from './svg-icons/toggle/check-box';
 import getMuiTheme from './styles/getMuiTheme';
+import deprecated from './utils/deprecatedPropType';
 
 function getStyles(props, state) {
   const {
@@ -114,7 +115,14 @@ const Checkbox = React.createClass({
      * The SvgIcon to use for the unchecked state.
      * This is useful to create icon toggles.
      */
-    unCheckedIcon: React.PropTypes.element,
+    unCheckedIcon: deprecated(React.PropTypes.element,
+      'Use uncheckedIcon instead.'),
+
+    /**
+     * The SvgIcon to use for the unchecked state.
+     * This is useful to create icon toggles.
+     */
+    uncheckedIcon: React.PropTypes.element,
 
     /**
      * ValueLink for when using controlled checkbox.
@@ -172,8 +180,8 @@ const Checkbox = React.createClass({
     this.refs.enhancedSwitch.setSwitched(newCheckedValue);
   },
 
-  _handleCheck(e, isInputChecked) {
-    if (this.props.onCheck) this.props.onCheck(e, isInputChecked);
+  _handleCheck(event, isInputChecked) {
+    if (this.props.onCheck) this.props.onCheck(event, isInputChecked);
   },
 
   _handleStateChange(newSwitched) {
@@ -181,55 +189,56 @@ const Checkbox = React.createClass({
   },
 
   render() {
-    let {
+    const {
       iconStyle,
       onCheck,
       checkedIcon,
+      uncheckedIcon,
       unCheckedIcon,
       ...other,
     } = this.props;
     const styles = getStyles(this.props, this.state);
-    let boxStyles =
+    const boxStyles =
       Object.assign(
         styles.box,
         this.state.switched && styles.boxWhenSwitched,
         iconStyle,
         this.props.disabled && styles.boxWhenDisabled);
-    let checkStyles =
+    const checkStyles =
       Object.assign(
         styles.check,
         this.state.switched && styles.checkWhenSwitched,
         iconStyle,
         this.props.disabled && styles.checkWhenDisabled);
 
-    let checkedElement = checkedIcon ? React.cloneElement(checkedIcon, {
+    const checkedElement = checkedIcon ? React.cloneElement(checkedIcon, {
       style: Object.assign(checkStyles, checkedIcon.props.style),
     }) : React.createElement(CheckboxChecked, {
       style: checkStyles,
     });
 
-    let unCheckedElement = unCheckedIcon ? React.cloneElement(unCheckedIcon, {
-      style: Object.assign(boxStyles, unCheckedIcon.props.style),
+    const unCheckedElement = (unCheckedIcon || uncheckedIcon) ? React.cloneElement((unCheckedIcon || uncheckedIcon), {
+      style: Object.assign(boxStyles, (unCheckedIcon || uncheckedIcon).props.style),
     }) : React.createElement(CheckboxOutline, {
       style: boxStyles,
     });
 
-    let checkboxElement = (
+    const checkboxElement = (
       <div>
         {unCheckedElement}
         {checkedElement}
       </div>
     );
 
-    let rippleColor = this.state.switched ? checkStyles.fill : boxStyles.fill;
-    let mergedIconStyle = Object.assign(styles.icon, iconStyle);
+    const rippleColor = this.state.switched ? checkStyles.fill : boxStyles.fill;
+    const mergedIconStyle = Object.assign(styles.icon, iconStyle);
 
-    let labelStyle = Object.assign(
+    const labelStyle = Object.assign(
       styles.label,
       this.props.labelStyle
     );
 
-    let enhancedSwitchProps = {
+    const enhancedSwitchProps = {
       ref: 'enhancedSwitch',
       inputType: 'checkbox',
       switched: this.state.switched,

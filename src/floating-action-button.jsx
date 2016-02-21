@@ -7,6 +7,7 @@ import Paper from './paper';
 import Children from './utils/children';
 import getMuiTheme from './styles/getMuiTheme';
 import warning from 'warning';
+import PropTypes from './utils/prop-types';
 
 function getStyles(props, state) {
   const {
@@ -163,6 +164,11 @@ const FloatingActionButton = React.createClass({
      * Override the inline-styles of the root element.
      */
     style: React.PropTypes.object,
+
+    /**
+     * The zDepth of the underlying `Paper` component.
+     */
+    zDepth: PropTypes.zDepth,
   },
 
   contextTypes: {
@@ -178,17 +184,15 @@ const FloatingActionButton = React.createClass({
       disabled: false,
       mini: false,
       secondary: false,
+      zDepth: 2,
     };
   },
 
   getInitialState() {
-    const zDepth = this.props.disabled ? 0 : 2;
-
     return {
       hovered: false,
-      initialZDepth: zDepth,
       touch: false,
-      zDepth: zDepth,
+      zDepth: this.props.disabled ? 0 : this.props.zDepth,
       muiTheme: this.context.muiTheme || getMuiTheme(),
     };
   },
@@ -212,65 +216,64 @@ const FloatingActionButton = React.createClass({
     };
 
     if (nextProps.disabled !== this.props.disabled) {
-      const zDepth = nextProps.disabled ? 0 : 2;
+      const zDepth = nextProps.disabled ? 0 : this.props.zDepth;
       newState.zDepth = zDepth;
-      newState.initialZDepth = zDepth;
     }
 
     this.setState(newState);
   },
 
-  _handleMouseDown(e) {
+  _handleMouseDown(event) {
     //only listen to left clicks
-    if (e.button === 0) {
-      this.setState({zDepth: this.state.initialZDepth + 1});
+    if (event.button === 0) {
+      this.setState({zDepth: this.props.zDepth + 1});
     }
-    if (this.props.onMouseDown) this.props.onMouseDown(e);
+    if (this.props.onMouseDown) this.props.onMouseDown(event);
   },
 
-  _handleMouseUp(e) {
-    this.setState({zDepth: this.state.initialZDepth});
-    if (this.props.onMouseUp) this.props.onMouseUp(e);
+  _handleMouseUp(event) {
+    this.setState({zDepth: this.props.zDepth});
+    if (this.props.onMouseUp) this.props.onMouseUp(event);
   },
 
-  _handleMouseLeave(e) {
-    if (!this.refs.container.isKeyboardFocused()) this.setState({zDepth: this.state.initialZDepth, hovered: false});
-    if (this.props.onMouseLeave) this.props.onMouseLeave(e);
+  _handleMouseLeave(event) {
+    if (!this.refs.container.isKeyboardFocused()) this.setState({zDepth: this.props.zDepth, hovered: false});
+    if (this.props.onMouseLeave) this.props.onMouseLeave(event);
   },
 
-  _handleMouseEnter(e) {
+  _handleMouseEnter(event) {
     if (!this.refs.container.isKeyboardFocused() && !this.state.touch) {
       this.setState({hovered: true});
     }
-    if (this.props.onMouseEnter) this.props.onMouseEnter(e);
+    if (this.props.onMouseEnter) this.props.onMouseEnter(event);
   },
 
-  _handleTouchStart(e) {
+  _handleTouchStart(event) {
     this.setState({
       touch: true,
-      zDepth: this.state.initialZDepth + 1,
+      zDepth: this.props.zDepth + 1,
     });
-    if (this.props.onTouchStart) this.props.onTouchStart(e);
+    if (this.props.onTouchStart) this.props.onTouchStart(event);
   },
 
-  _handleTouchEnd(e) {
-    this.setState({zDepth: this.state.initialZDepth});
-    if (this.props.onTouchEnd) this.props.onTouchEnd(e);
+  _handleTouchEnd(event) {
+    this.setState({zDepth: this.props.zDepth});
+    if (this.props.onTouchEnd) this.props.onTouchEnd(event);
   },
 
-  _handleKeyboardFocus(e, keyboardFocused) {
+  _handleKeyboardFocus(event, keyboardFocused) {
     if (keyboardFocused && !this.props.disabled) {
-      this.setState({zDepth: this.state.initialZDepth + 1});
+      this.setState({zDepth: this.props.zDepth + 1});
       this.refs.overlay.style.backgroundColor =
         ColorManipulator.fade(this.getStyles().icon.color, 0.4);
     } else if (!this.state.hovered) {
-      this.setState({zDepth: this.state.initialZDepth});
+      this.setState({zDepth: this.props.zDepth});
       this.refs.overlay.style.backgroundColor = 'transparent';
     }
   },
 
   render() {
-    let {
+    const {
       className,
       disabled,
       mini,
@@ -298,14 +301,14 @@ const FloatingActionButton = React.createClass({
       );
     }
 
-    let children = Children.extend(this.props.children, {
+    const children = Children.extend(this.props.children, {
       style: Object.assign({},
         styles.icon,
         mini && styles.iconWhenMini,
         iconStyle),
     });
 
-    let buttonEventHandlers = disabled ? null : {
+    const buttonEventHandlers = disabled ? null : {
       onMouseDown: this._handleMouseDown,
       onMouseUp: this._handleMouseUp,
       onMouseLeave: this._handleMouseLeave,

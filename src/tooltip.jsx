@@ -1,6 +1,5 @@
 import React from 'react';
 import Transitions from './styles/transitions';
-import Colors from './styles/colors';
 import getMuiTheme from './styles/getMuiTheme';
 
 function getStyles(props, state) {
@@ -14,6 +13,7 @@ function getStyles(props, state) {
   const {
     baseTheme,
     zIndex,
+    tooltip,
   } = state.muiTheme;
 
   const styles = {
@@ -24,7 +24,7 @@ function getStyles(props, state) {
       lineHeight: '22px',
       padding: '0 8px',
       zIndex: zIndex.tooltip,
-      color: Colors.white,
+      color: tooltip.color,
       overflow: 'hidden',
       top: -10000,
       borderRadius: 2,
@@ -68,7 +68,7 @@ function getStyles(props, state) {
       padding: '0 16px',
     },
     rippleWhenShown: {
-      backgroundColor: Colors.grey700,
+      backgroundColor: tooltip.rippleBackgroundColor,
       transition: `${Transitions.easeOut('450ms', 'width', '0ms')}, ${
         Transitions.easeOut('450ms', 'height', '0ms')}, ${
         Transitions.easeOut('450ms', 'backgroundColor', '0ms')}`,
@@ -136,12 +136,12 @@ const Tooltip = React.createClass({
 
   _setRippleSize() {
     const ripple = this.refs.ripple;
-    const tooltip = window.getComputedStyle(this.refs.tooltip);
-    let tooltipWidth = parseInt(tooltip.getPropertyValue('width'), 10) /
+    const tooltip = this.refs.tooltip;
+    const tooltipWidth = parseInt(tooltip.offsetWidth, 10) /
       (this.props.horizontalPosition === 'center' ? 2 : 1);
-    let tooltipHeight = parseInt(tooltip.getPropertyValue('height'), 10);
+    const tooltipHeight = parseInt(tooltip.offsetHeight, 10);
 
-    let rippleDiameter = Math.ceil((Math.sqrt(Math.pow(tooltipHeight, 2) +
+    const rippleDiameter = Math.ceil((Math.sqrt(Math.pow(tooltipHeight, 2) +
                                     Math.pow(tooltipWidth, 2) ) * 2));
     if (this.props.show) {
       ripple.style.height = `${rippleDiameter}px`;

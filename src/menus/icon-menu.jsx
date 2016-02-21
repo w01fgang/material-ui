@@ -116,8 +116,16 @@ const IconMenu = React.createClass({
     /**
      * Sets the delay in milliseconds before closing the
      * menu when an item is clicked.
+     * If set to 0 then the auto close functionality
+     * will be disabled.
      */
     touchTapCloseDelay: React.PropTypes.number,
+
+    /**
+     * If true, the popover will render on top of an invisible
+     * layer, which will prevent clicks to the underlying elements.
+     */
+    useLayerForClickAway: React.PropTypes.bool,
   },
 
   contextTypes: {
@@ -149,6 +157,7 @@ const IconMenu = React.createClass({
         horizontal: 'left',
       },
       touchTapCloseDelay: 200,
+      useLayerForClickAway: false,
     };
   },
 
@@ -160,7 +169,6 @@ const IconMenu = React.createClass({
       open: false,
     };
   },
-
   getChildContext() {
     return {
       muiTheme: this.state.muiTheme,
@@ -201,7 +209,7 @@ const IconMenu = React.createClass({
     this.setState({open: false}, () => {
       //Set focus on the icon button when the menu close
       if (isKeyboard) {
-        let iconButton = this.refs[this.state.iconButtonRef];
+        const iconButton = this.refs[this.state.iconButtonRef];
         ReactDOM.findDOMNode(iconButton).focus();
         iconButton.setKeyboardFocus();
       }
@@ -228,10 +236,13 @@ const IconMenu = React.createClass({
   },
 
   _handleItemTouchTap(event, child) {
-    const isKeyboard = Events.isKeyboard(event);
-    this.timerCloseId = setTimeout(() => {
-      this.close(isKeyboard ? 'enter' : 'itemTap', isKeyboard);
-    }, this.props.touchTapCloseDelay);
+
+    if (this.props.touchTapCloseDelay !== 0 && !child.props.hasOwnProperty('menuItems')) {
+      const isKeyboard = Events.isKeyboard(event);
+      this.timerCloseId = setTimeout(() => {
+        this.close(isKeyboard ? 'enter' : 'itemTap', isKeyboard);
+      }, this.props.touchTapCloseDelay);
+    }
 
     this.props.onItemTouchTap(event, child);
   },
@@ -241,7 +252,7 @@ const IconMenu = React.createClass({
   },
 
   render() {
-    let {
+    const {
       anchorOrigin,
       className,
       iconButtonElement,
@@ -256,6 +267,7 @@ const IconMenu = React.createClass({
       menuStyle,
       style,
       targetOrigin,
+      useLayerForClickAway,
       ...other,
     } = this.props;
 
@@ -265,7 +277,7 @@ const IconMenu = React.createClass({
 
     const {open, anchorEl} = this.state;
 
-    let styles = {
+    const styles = {
       root: {
         display: 'inline-block',
         position: 'relative',
@@ -276,20 +288,20 @@ const IconMenu = React.createClass({
       },
     };
 
-    let mergedRootStyles = Object.assign(styles.root, style);
-    let mergedMenuStyles = Object.assign(styles.menu, menuStyle);
+    const mergedRootStyles = Object.assign(styles.root, style);
+    const mergedMenuStyles = Object.assign(styles.menu, menuStyle);
 
-    let iconButton = React.cloneElement(iconButtonElement, {
+    const iconButton = React.cloneElement(iconButtonElement, {
       onKeyboardFocus: this.props.onKeyboardFocus,
       iconStyle: Object.assign(iconStyle, iconButtonElement.props.iconStyle),
-      onTouchTap: (e) => {
-        this.open(Events.isKeyboard(e) ? 'keyboard' : 'iconTap', e);
-        if (iconButtonElement.props.onTouchTap) iconButtonElement.props.onTouchTap(e);
+      onTouchTap: (event) => {
+        this.open(Events.isKeyboard(event) ? 'keyboard' : 'iconTap', event);
+        if (iconButtonElement.props.onTouchTap) iconButtonElement.props.onTouchTap(event);
       },
       ref: this.state.iconButtonRef,
     });
 
-    let menu = (
+    const menu = (
       <Menu
         {...other}
         animateOpen={true}
@@ -320,7 +332,7 @@ const IconMenu = React.createClass({
           open={open}
           anchorEl={anchorEl}
           childContextTypes={this.constructor.childContextTypes}
-          useLayerForClickAway={false}
+          useLayerForClickAway={useLayerForClickAway}
           onRequestClose={this.close}
           context={this.context}
         >

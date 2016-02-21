@@ -28,7 +28,7 @@ const Clock = React.createClass({
   getInitialState() {
     return {
       muiTheme: this.context.muiTheme || getMuiTheme(),
-      selectedTime: this.props.initialTime,
+      selectedTime: this.props.initialTime || new Date(),
       mode: 'hour',
     };
   },
@@ -36,7 +36,7 @@ const Clock = React.createClass({
   componentWillReceiveProps(nextProps, nextContext) {
     this.setState({
       muiTheme: nextContext.muiTheme || this.state.muiTheme,
-      selectedTime: nextProps.initialTime,
+      selectedTime: nextProps.initialTime || new Date(),
     });
   },
 
@@ -48,7 +48,7 @@ const Clock = React.createClass({
     }, 100);
   },
 
-  _setAffix(affix) {
+  handleSelectAffix(affix) {
     if (affix === this._getAffix()) return;
 
     const hours = this.state.selectedTime.getHours();
@@ -175,7 +175,7 @@ const Clock = React.createClass({
           mode={this.state.mode}
           format={this.props.format}
           affix={this._getAffix()}
-          onSelectAffix={this._setAffix}
+          onSelectAffix={this.handleSelectAffix}
           onSelectHour={this._setMode.bind(this, 'hour')}
           onSelectMin={this._setMode.bind(this, 'minute')}
         />

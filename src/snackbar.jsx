@@ -1,9 +1,8 @@
 import React from 'react';
 import Transitions from './styles/transitions';
-import ClickAwayable from './mixins/click-awayable';
+import ClickAwayListener from './ClickAwayListener';
 import FlatButton from './flat-button';
 import getMuiTheme from './styles/getMuiTheme';
-import ContextPure from './mixins/context-pure';
 import StyleResizable from './mixins/style-resizable';
 
 function getStyles(props, state) {
@@ -139,29 +138,7 @@ const Snackbar = React.createClass({
 
   mixins: [
     StyleResizable,
-    ClickAwayable,
-    ContextPure,
   ],
-
-  statics: {
-    getRelevantContextKeys(muiTheme) {
-      const theme = muiTheme.snackbar;
-      const spacing = muiTheme.baseTheme.spacing;
-
-      return {
-        textColor: theme.textColor,
-        backgroundColor: theme.backgroundColor,
-        desktopGutter: spacing.desktopGutter,
-        desktopSubheaderHeight: spacing.desktopSubheaderHeight,
-        actionColor: theme.actionColor,
-      };
-    },
-    getChildrenClasses() {
-      return [
-        FlatButton,
-      ];
-    },
-  },
 
   getInitialState() {
     return {
@@ -180,12 +157,8 @@ const Snackbar = React.createClass({
 
   componentDidMount() {
     if (this.state.open) {
-      this._setAutoHideTimer();
-
-      //Only Bind clickaway after transition finishes
-      this.timerTransitionId = setTimeout(() => {
-        this._bindClickAway();
-      }, 400);
+      this.setAutoHideTimer();
+      this.setTransitionTimer();
     }
   },
 
@@ -222,15 +195,10 @@ const Snackbar = React.createClass({
   componentDidUpdate(prevProps, prevState) {
     if (prevState.open !== this.state.open) {
       if (this.state.open) {
-        this._setAutoHideTimer();
-
-        //Only Bind clickaway after transition finishes
-        this.timerTransitionId = setTimeout(() => {
-          this._bindClickAway();
-        }, 400);
+        this.setAutoHideTimer();
+        this.setTransitionTimer();
       } else {
         clearTimeout(this.timerAutoHideId);
-        this._unbindClickAway();
       }
     }
   },
@@ -239,7 +207,6 @@ const Snackbar = React.createClass({
     clearTimeout(this.timerAutoHideId);
     clearTimeout(this.timerTransitionId);
     clearTimeout(this.timerOneAtTheTimeId);
-    this._unbindClickAway();
   },
 
   manuallyBindClickAway: true,
@@ -249,6 +216,8 @@ const Snackbar = React.createClass({
   timerOneAtTheTimeId: undefined,
 
   componentClickAway() {
+    if (this.timerTransitionId) return; // If transitioning, don't close snackbar
+
     if (this.props.open !== null && this.props.onRequestClose) {
       this.props.onRequestClose('clickaway');
     } else {
@@ -256,7 +225,8 @@ const Snackbar = React.createClass({
     }
   },
 
-  _setAutoHideTimer() {
+  // Timer that controls delay before snackbar auto hides
+  setAutoHideTimer() {
     const autoHideDuration = this.props.autoHideDuration;
 
     if (autoHideDuration > 0) {
@@ -269,6 +239,13 @@ const Snackbar = React.createClass({
         }
       }, autoHideDuration);
     }
+  },
+
+  // Timer that controls delay before click-away events are captured (based on when animation completes)
+  setTransitionTimer() {
+    this.timerTransitionId = setTimeout(() => {
+      this.timerTransitionId = undefined;
+    }, 400);
   },
 
   render() {
@@ -285,6 +262,7 @@ const Snackbar = React.createClass({
       muiTheme: {
         prepareStyles,
       },
+      open,
     } = this.state;
 
     const styles = getStyles(this.props, this.state);
@@ -298,14 +276,16 @@ const Snackbar = React.createClass({
     );
 
     return (
-      <div {...others} style={prepareStyles(Object.assign(styles.root, style))}>
-        <div style={prepareStyles(Object.assign(styles.body, bodyStyle))}>
-          <div style={prepareStyles(styles.content)}>
-            <span>{message}</span>
-            {actionButton}
+      <ClickAwayListener onClickAway={open && this.componentClickAway}>
+        <div {...others} style={prepareStyles(Object.assign(styles.root, style))}>
+          <div style={prepareStyles(Object.assign(styles.body, bodyStyle))}>
+            <div style={prepareStyles(styles.content)}>
+              <span>{message}</span>
+              {actionButton}
+            </div>
           </div>
         </div>
-      </div>
+      </ClickAwayListener>
     );
   },
 

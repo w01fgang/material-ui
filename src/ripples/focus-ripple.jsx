@@ -75,24 +75,20 @@ const FocusRipple = React.createClass({
   _pulsate() {
     if (!this.isMounted()) return;
 
-    let innerCircle = ReactDOM.findDOMNode(this.refs.innerCircle);
+    const innerCircle = ReactDOM.findDOMNode(this.refs.innerCircle);
     if (!innerCircle) return;
 
     const startScale = 'scale(1)';
     const endScale = 'scale(0.85)';
-    let currentScale = innerCircle.style.transform;
-    let nextScale;
-
-    currentScale = currentScale || startScale;
-    nextScale = currentScale === startScale ?
-      endScale : startScale;
+    const currentScale = innerCircle.style.transform || startScale;
+    const nextScale = currentScale === startScale ? endScale : startScale;
 
     autoPrefix.set(innerCircle.style, 'transform', nextScale, this.props.muiTheme);
     this._timeout = setTimeout(this._pulsate, pulsateDuration);
   },
 
   _setRippleSize() {
-    let el = ReactDOM.findDOMNode(this.refs.innerCircle);
+    const el = ReactDOM.findDOMNode(this.refs.innerCircle);
     const height = el.offsetHeight;
     const width = el.offsetWidth;
     const size = Math.max(height, width);

@@ -49,6 +49,24 @@ export default {
     return newDate;
   },
 
+  addHours(d, hours) {
+    const newDate = this.clone(d);
+    newDate.setHours(d.getHours() + hours);
+    return newDate;
+  },
+
+  addMinutes(d, minutes) {
+    const newDate = this.clone(d);
+    newDate.setMinutes(d.getMinutes() + minutes);
+    return newDate;
+  },
+
+  addSeconds(d, seconds) {
+    const newDate = this.clone(d);
+    newDate.setSeconds(d.getMinutes() + seconds);
+    return newDate;
+  },
+
   clone(d) {
     return new Date(d.getTime());
   },
@@ -60,7 +78,7 @@ export default {
   },
 
   getDaysInMonth(d) {
-    let resultDate = this.getFirstDayOfMonth(d);
+    const resultDate = this.getFirstDayOfMonth(d);
 
     resultDate.setMonth(resultDate.getMonth() + 1);
     resultDate.setDate(resultDate.getDate() - 1);
@@ -78,9 +96,9 @@ export default {
   },
 
   getWeekArray(d, firstDayOfWeek) {
-    let dayArray = [];
-    let daysInMonth = this.getDaysInMonth(d);
-    let weekArray = [];
+    const dayArray = [];
+    const daysInMonth = this.getDaysInMonth(d);
+    const weekArray = [];
     let week = [];
 
     for (let i = 1; i <= daysInMonth; i++) {
@@ -121,6 +139,46 @@ export default {
     const d = date.getDate();
     const y = date.getFullYear();
     return `${m}/${d}/${y}`;
+  },
+
+  /**
+   * formatTime, extracted from date-picker/date-picker.
+   *
+   * @param date [Date] A Date object.
+   * @param format [String] One of 'ampm', '24hr', defaults to 'ampm'.
+   * @param pedantic [Boolean] Check time-picker/time-picker.jsx file.
+   *
+   * @return String A string representing the formatted time.
+   */
+  formatTime(date, format = 'ampm', pedantic = false) {
+    if (!date) return '';
+    let hours = date.getHours();
+    let mins = date.getMinutes().toString();
+
+    if (format === 'ampm') {
+      const isAM = hours < 12;
+      hours = hours % 12;
+      const additional = isAM ? ' am' : ' pm';
+      hours = (hours || 12).toString();
+
+      if (mins.length < 2 ) mins = `0${mins}`;
+
+      if (pedantic) {
+        // Treat midday/midnight specially http://www.nist.gov/pml/div688/times.cfm
+        if (hours === '12' && mins === '00') {
+          return additional === ' pm' ? '12 noon' : '12 midnight';
+        }
+      }
+
+      return hours + (mins === '00' ? '' : `:${mins}`) + additional;
+    }
+
+    hours = hours.toString();
+
+    if (hours.length < 2) hours = `0${hours}`;
+    if (mins.length < 2) mins = `0${mins}`;
+
+    return `${hours}:${mins}`;
   },
 
   isEqualDate(d1, d2) {

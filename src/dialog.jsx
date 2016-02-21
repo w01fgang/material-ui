@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import WindowListenable from './mixins/window-listenable';
-import KeyCode from './utils/key-code';
+import EventListener from 'react-event-listener';
+import keycode from 'keycode';
 import Transitions from './styles/transitions';
 import Overlay from './overlay';
 import RenderToLayer from './render-to-layer';
@@ -191,8 +191,6 @@ const DialogInline = React.createClass({
     muiTheme: React.PropTypes.object,
   },
 
-  mixins: [WindowListenable],
-
   getInitialState() {
     return {
       muiTheme: this.context.muiTheme || getMuiTheme(),
@@ -217,11 +215,6 @@ const DialogInline = React.createClass({
 
   componentDidUpdate() {
     this._positionDialog();
-  },
-
-  windowListeners: {
-    keyup: '_handleWindowKeyUp',
-    resize: '_handleResize',
   },
 
   _positionDialog() {
@@ -291,7 +284,7 @@ const DialogInline = React.createClass({
   },
 
   _handleWindowKeyUp(event) {
-    if (event.keyCode === KeyCode.ESC) {
+    if (keycode(event) === 'esc') {
       this._requestClose(false);
     }
   },
@@ -347,6 +340,11 @@ const DialogInline = React.createClass({
 
     return (
       <div className={className} style={prepareStyles(styles.root)}>
+        <EventListener
+          elementName="window"
+          onKeyUp={this._handleWindowKeyUp}
+          onResize={this._handleResize}
+        />
         <ReactTransitionGroup
           component="div" ref="dialogWindow"
           transitionAppear={true} transitionAppearTimeout={450}

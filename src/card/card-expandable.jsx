@@ -3,7 +3,6 @@ import OpenIcon from '../svg-icons/hardware/keyboard-arrow-up';
 import CloseIcon from '../svg-icons/hardware/keyboard-arrow-down';
 import IconButton from '../icon-button';
 import getMuiTheme from '../styles/getMuiTheme';
-import ContextPure from '../mixins/context-pure';
 
 function getStyles() {
   return {
@@ -37,18 +36,6 @@ const CardExpandable = React.createClass({
     muiTheme: React.PropTypes.object,
   },
 
-  mixins: [
-    ContextPure,
-  ],
-
-  statics: {
-    getChildrenClasses() {
-      return [
-        IconButton,
-      ];
-    },
-  },
-
   getInitialState() {
     return {
       muiTheme: this.context.muiTheme || getMuiTheme(),
@@ -75,7 +62,7 @@ const CardExpandable = React.createClass({
         style={Object.assign(styles.root, this.props.style)}
         onTouchTap={this.props.onExpanding}
       >
-        {this.props.expanded ? <OpenIcon/> : <CloseIcon/>}
+        {this.props.expanded ? <OpenIcon /> : <CloseIcon />}
       </IconButton>
     );
   },

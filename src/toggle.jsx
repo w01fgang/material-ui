@@ -21,7 +21,7 @@ function getStyles(props, state) {
       width: 36,
       padding: '4px 0px 6px 2px',
     },
-    rippleStyle: {
+    ripple: {
       top: -10,
       left: -10,
       color: state.switched ? toggle.thumbOnColor : baseTheme.palette.textColor,
@@ -190,8 +190,8 @@ const Toggle = React.createClass({
     this.refs.enhancedSwitch.setSwitched(newToggledValue);
   },
 
-  _handleToggle(e, isInputChecked) {
-    if (this.props.onToggle) this.props.onToggle(e, isInputChecked);
+  _handleToggle(event, isInputChecked) {
+    if (this.props.onToggle) this.props.onToggle(event, isInputChecked);
   },
 
   _handleStateChange(newSwitched) {

@@ -93,7 +93,7 @@ const RadioButtonGroup = React.createClass({
   },
 
   componentWillReceiveProps(nextProps, nextContext) {
-    let newState = {muiTheme: nextContext.muiTheme || this.state.muiTheme};
+    const newState = {muiTheme: nextContext.muiTheme || this.state.muiTheme};
 
     if (nextProps.hasOwnProperty('valueSelected')) {
       newState.selected = nextProps.valueSelected;
@@ -116,12 +116,12 @@ const RadioButtonGroup = React.createClass({
     }
   },
 
-  _onChange(e, newSelection) {
+  handleChange(event, newSelection) {
     this._updateRadioButtons(newSelection);
 
     // Successful update
     if (this.state.numberCheckedRadioButtons === 0) {
-      if (this.props.onChange) this.props.onChange(e, newSelection);
+      if (this.props.onChange) this.props.onChange(event, newSelection);
     }
   },
 
@@ -142,8 +142,8 @@ const RadioButtonGroup = React.createClass({
       prepareStyles,
     } = this.state.muiTheme;
 
-    let options = React.Children.map(this.props.children, (option) => {
-      let {
+    const options = React.Children.map(this.props.children, (option) => {
+      const {
         name,
         value,
         label,
@@ -160,7 +160,7 @@ const RadioButtonGroup = React.createClass({
           value={option.props.value}
           label={option.props.label}
           labelPosition={this.props.labelPosition}
-          onCheck={this._onChange}
+          onCheck={this.handleChange}
           checked={option.props.value === this.state.selected}
         />
       );

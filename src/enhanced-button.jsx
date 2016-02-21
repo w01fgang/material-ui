@@ -1,9 +1,8 @@
 import React from 'react';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
-import Colors from './styles/colors';
 import Children from './utils/children';
 import Events from './utils/events';
-import KeyCode from './utils/key-code';
+import keycode from 'keycode';
 import FocusRipple from './ripples/focus-ripple';
 import TouchRipple from './ripples/touch-ripple';
 import getMuiTheme from './styles/getMuiTheme';
@@ -15,7 +14,7 @@ let tabPressed = false;
 function injectStyle() {
   if (!styleInjected) {
     // Remove inner padding and border in Firefox 4+.
-    let style = document.createElement('style');
+    const style = document.createElement('style');
     style.innerHTML = `
       button::-moz-focus-inner,
       input::-moz-focus-inner {
@@ -31,8 +30,8 @@ function injectStyle() {
 
 function listenForTabPresses() {
   if (!listening) {
-    Events.on(window, 'keydown', (e) => {
-      tabPressed = e.keyCode === KeyCode.TAB;
+    Events.on(window, 'keydown', (event) => {
+      tabPressed = keycode(event) === 'tab';
     });
     listening = true;
   }
@@ -130,21 +129,25 @@ const EnhancedButton = React.createClass({
     }
   },
 
+  componentWillUnmount() {
+    clearTimeout(this._focusTimeout);
+  },
+
   isKeyboardFocused() {
     return this.state.isKeyboardFocused;
   },
 
-  removeKeyboardFocus(e) {
+  removeKeyboardFocus(event) {
     if (this.state.isKeyboardFocused) {
       this.setState({isKeyboardFocused: false});
-      this.props.onKeyboardFocus(e, false);
+      this.props.onKeyboardFocus(event, false);
     }
   },
 
-  setKeyboardFocus(e) {
+  setKeyboardFocus(event) {
     if (!this.state.isKeyboardFocused) {
       this.setState({isKeyboardFocused: true});
-      this.props.onKeyboardFocus(e, true);
+      this.props.onKeyboardFocus(event, true);
     }
   },
 
@@ -199,51 +202,51 @@ const EnhancedButton = React.createClass({
     });
   },
 
-  _handleKeyDown(e) {
+  _handleKeyDown(event) {
     if (!this.props.disabled && !this.props.disableKeyboardFocus) {
-      if (e.keyCode === KeyCode.ENTER && this.state.isKeyboardFocused) {
-        this._handleTouchTap(e);
+      if (keycode(event) === 'enter' && this.state.isKeyboardFocused) {
+        this._handleTouchTap(event);
       }
     }
-    this.props.onKeyDown(e);
+    this.props.onKeyDown(event);
   },
 
-  _handleKeyUp(e) {
+  _handleKeyUp(event) {
     if (!this.props.disabled && !this.props.disableKeyboardFocus) {
-      if (e.keyCode === KeyCode.SPACE && this.state.isKeyboardFocused) {
-        this._handleTouchTap(e);
+      if (keycode(event) === 'space' && this.state.isKeyboardFocused) {
+        this._handleTouchTap(event);
       }
     }
-    this.props.onKeyUp(e);
+    this.props.onKeyUp(event);
   },
 
-  _handleBlur(e) {
+  _handleBlur(event) {
     this._cancelFocusTimeout();
-    this.removeKeyboardFocus(e);
-    this.props.onBlur(e);
+    this.removeKeyboardFocus(event);
+    this.props.onBlur(event);
   },
 
-  _handleFocus(e) {
+  _handleFocus(event) {
     if (!this.props.disabled && !this.props.disableKeyboardFocus) {
       //setTimeout is needed because the focus event fires first
       //Wait so that we can capture if this was a keyboard focus
       //or touch focus
       this._focusTimeout = setTimeout(() => {
         if (tabPressed) {
-          this.setKeyboardFocus(e);
+          this.setKeyboardFocus(event);
         }
       }, 150);
 
-      this.props.onFocus(e);
+      this.props.onFocus(event);
     }
   },
 
-  _handleTouchTap(e) {
+  _handleTouchTap(event) {
     this._cancelFocusTimeout();
     if (!this.props.disabled) {
       tabPressed = false;
-      this.removeKeyboardFocus(e);
-      this.props.onTouchTap(e);
+      this.removeKeyboardFocus(event);
+      this.props.onTouchTap(event);
     }
   },
 
@@ -274,6 +277,7 @@ const EnhancedButton = React.createClass({
 
     const {
       prepareStyles,
+      enhancedButton,
     } = this.state.muiTheme;
 
     const mergedStyles = Object.assign({
@@ -283,8 +287,7 @@ const EnhancedButton = React.createClass({
       display: 'inline-block',
       font: 'inherit',
       fontFamily: this.state.muiTheme.rawTheme.fontFamily,
-      tapHighlightColor: Colors.transparent,
-      appearance: linkButton ? null : 'button',
+      tapHighlightColor: enhancedButton.tapHighlightColor,
       cursor: disabled ? 'default' : 'pointer',
       textDecoration: 'none',
       outline: 'none',

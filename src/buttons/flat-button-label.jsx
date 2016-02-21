@@ -1,5 +1,4 @@
 import React from 'react';
-import ContextPure from '../mixins/context-pure';
 import getMuiTheme from '../styles/getMuiTheme';
 
 function getStyles(props, state) {
@@ -12,6 +11,7 @@ function getStyles(props, state) {
       position: 'relative',
       paddingLeft: baseTheme.spacing.desktopGutterLess,
       paddingRight: baseTheme.spacing.desktopGutterLess,
+      verticalAlign: 'middle',
     },
   };
 }
@@ -35,18 +35,6 @@ const FlatButtonLabel = React.createClass({
     muiTheme: React.PropTypes.object,
   },
 
-  mixins: [
-    ContextPure,
-  ],
-
-  statics: {
-    getRelevantContextKeys(muiTheme) {
-      return {
-        spacingDesktopGutterLess: muiTheme.rawTheme.spacing.desktopGutterLess,
-      };
-    },
-  },
-
   getInitialState() {
     return {
       muiTheme: this.context.muiTheme || getMuiTheme(),
@@ -61,7 +49,7 @@ const FlatButtonLabel = React.createClass({
 
   componentWillReceiveProps(nextProps, nextContext) {
     this.setState({
-      muiTheme: nextContext.muiTheme || nextContext.muiTheme,
+      muiTheme: nextContext.muiTheme || this.state.muiTheme,
     });
   },
 

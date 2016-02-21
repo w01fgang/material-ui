@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import StylePropable from './mixins/style-propable';
-import KeyCode from './utils/key-code';
+import keycode from 'keycode';
 import TextField from './text-field';
 import Menu from './menus/menu';
 import MenuItem from './menus/menu-item';
@@ -10,6 +9,43 @@ import Popover from './popover/popover';
 import PropTypes from './utils/prop-types';
 import getMuiTheme from './styles/getMuiTheme';
 import warning from 'warning';
+import deprecated from './utils/deprecatedPropType';
+
+function getStyles(props, state) {
+  const {
+    anchorEl,
+  } = state;
+
+  const {
+    fullWidth,
+  } = props;
+
+  const styles = {
+    root: {
+      display: 'inline-block',
+      position: 'relative',
+      width: fullWidth ? '100%' : 256,
+    },
+    menu: {
+      width: '100%',
+    },
+    list: {
+      display: 'block',
+      width: fullWidth ? '100%' : 256,
+    },
+    innerDiv: {
+      overflow: 'hidden',
+    },
+  };
+
+  if (anchorEl && fullWidth) {
+    styles.popover = {
+      width: anchorEl.clientWidth,
+    };
+  }
+
+  return styles;
+}
 
 const AutoComplete = React.createClass({
 
@@ -91,6 +127,16 @@ const AutoComplete = React.createClass({
     menuStyle: React.PropTypes.object,
 
     /**
+     * Callback function that is fired when the `TextField` loses focus.
+     */
+    onBlur: React.PropTypes.func,
+
+    /**
+     * Callback function that is fired when the `TextField` gains focus.
+     */
+    onFocus: React.PropTypes.func,
+
+    /**
      * Gets called when list item is clicked or pressed enter.
      */
     onNewRequest: React.PropTypes.func,
@@ -104,6 +150,11 @@ const AutoComplete = React.createClass({
      * Auto complete menu is open if true.
      */
     open: React.PropTypes.bool,
+
+    /**
+     * If true, the list item is showed when a focus event triggers.
+     */
+    openOnFocus: React.PropTypes.bool,
 
     /**
      * Text being input to auto complete.
@@ -123,7 +174,7 @@ const AutoComplete = React.createClass({
     /**
      * If true, will update when focus event triggers.
      */
-    triggerUpdateOnFocus: React.PropTypes.bool,
+    triggerUpdateOnFocus: deprecated(React.PropTypes.bool, 'Instead, use openOnFocus'),
   },
 
   contextTypes: {
@@ -134,30 +185,26 @@ const AutoComplete = React.createClass({
     muiTheme: React.PropTypes.object,
   },
 
-  mixins: [
-    StylePropable,
-  ],
-
   getDefaultProps() {
     return {
       anchorOrigin: {
         vertical: 'bottom',
         horizontal: 'left',
       },
+      animated: true,
+      disableFocusRipple: true,
+      filter: (searchText, key) => searchText !== '' && key.includes(searchText),
+      fullWidth: false,
+      open: false,
+      openOnFocus: false,
+      onUpdateInput: () => {},
+      onNewRequest: () => {},
+      searchText: '',
+      menuCloseDelay: 200,
       targetOrigin: {
         vertical: 'top',
         horizontal: 'left',
       },
-      animated: true,
-      fullWidth: false,
-      open: false,
-      searchText: '',
-      menuCloseDelay: 200,
-      disableFocusRipple: true,
-      onUpdateInput: () => {},
-      onNewRequest: () => {},
-      filter: (searchText, key) => searchText !== '' && key.includes(searchText),
-      triggerUpdateOnFocus: false,
     };
   },
 
@@ -167,6 +214,7 @@ const AutoComplete = React.createClass({
       open: this.props.open,
       anchorEl: null,
       muiTheme: this.context.muiTheme || getMuiTheme(),
+      focusTextField: true,
     };
   },
 
@@ -177,7 +225,6 @@ const AutoComplete = React.createClass({
   },
 
   componentWillMount() {
-    this.focusOnInput = false;
     this.requestsList = [];
   },
 
@@ -190,20 +237,16 @@ const AutoComplete = React.createClass({
   },
 
   componentWillUnmount() {
-    clearTimeout(this.timerCloseId);
+    clearTimeout(this.timerTouchTapCloseId);
+    clearTimeout(this.timerBlurCloseId);
   },
 
   componentClickAway() {
     this.close();
-    this.focusOnInput = false;
   },
 
-  open() {
-    this.setState({
-      open: true,
-      anchorEl: ReactDOM.findDOMNode(this.refs.searchTextField),
-    });
-  },
+  timerTouchTapCloseId: undefined,
+  timerBlurCloseId: undefined,
 
   close() {
     this.setState({
@@ -226,18 +269,6 @@ const AutoComplete = React.createClass({
     return this.state.searchText;
   },
 
-  updateRequests(searchText) {
-    this.setState({
-      searchText: searchText,
-      open: true,
-      anchorEl: ReactDOM.findDOMNode(this.refs.searchTextField),
-    });
-
-    this.focusOnInput = true;
-
-    this.props.onUpdateInput(searchText, this.props.dataSource);
-  },
-
   handleItemTouchTap(event, child) {
     const dataSource = this.props.dataSource;
     let chosenRequest;
@@ -255,37 +286,38 @@ const AutoComplete = React.createClass({
       searchText = chosenRequest;
     }
 
-    this.setState({
-      searchText: searchText,
-    });
+    this.props.onNewRequest(chosenRequest, index);
 
-    this.props.onNewRequest(chosenRequest, index, dataSource);
-
-    this.timerCloseId = setTimeout(() => {
-      this.close();
-    }, this.props.menuCloseDelay);
-  },
-
-  handleEnterKeyDown() {
-    this.props.onNewRequest(this.state.searchText);
-
-    this.timerCloseId = setTimeout(() => {
+    clearTimeout(this.timerBlurCloseId);
+    this.timerTouchTapCloseId = setTimeout(() => {
+      this.setState({
+        searchText: searchText,
+      });
       this.close();
     }, this.props.menuCloseDelay);
   },
 
   handleKeyDown(event) {
-    switch (event.keyCode) {
-      case KeyCode.ESC:
+    switch (keycode(event)) {
+      case 'enter':
+        this.close();
+        const searchText = this.state.searchText;
+        if (searchText !== '') {
+          this.props.onNewRequest(searchText, -1);
+        }
+        break;
+
+      case 'esc':
         this.close();
         break;
 
-      case KeyCode.DOWN:
-        if (this.focusOnInput && this.state.open) {
-          event.preventDefault();
-          this.focusOnInput = false;
-          this.open();
-        }
+      case 'down':
+        event.preventDefault();
+        this.setState({
+          open: true,
+          focusTextField: false,
+          anchorEl: ReactDOM.findDOMNode(this.refs.searchTextField),
+        });
         break;
 
       default:
@@ -294,21 +326,52 @@ const AutoComplete = React.createClass({
   },
 
   handleChange(event) {
-    const value = event.target.value;
-    this.updateRequests(value);
+    const searchText = event.target.value;
+
+    // Make sure that we have a new searchText.
+    // Fix an issue with a Cordova Webview
+    if (searchText === this.state.searchText) {
+      return;
+    }
+
+    this.setState({
+      searchText: searchText,
+      open: true,
+      anchorEl: ReactDOM.findDOMNode(this.refs.searchTextField),
+    }, () => {
+      this.props.onUpdateInput(searchText, this.props.dataSource);
+    });
   },
 
-  handleBlur() {
-    if (this.focusOnInput && this.state.open) {
-      this.refs.searchTextField.focus();
+  handleBlur(event) {
+    // Run asynchronously to wait for a potential handleItemTouchTap() call.
+    // The blur event occurs first on a click device and after on a touch device.
+    if (this.state.focusTextField) {
+      this.timerBlurCloseId = setTimeout(() => {
+        this.close();
+      }, 0);
+    }
+
+    if (this.props.onBlur) {
+      this.props.onBlur(event);
     }
   },
 
-  handleFocus() {
-    if (!this.state.open && (this.props.triggerUpdateOnFocus || this.requestsList > 0)) {
-      this.updateRequests(this.state.searchText);
+  handleFocus(event) {
+    if (!this.state.open && (this.props.triggerUpdateOnFocus || this.props.openOnFocus)) {
+      this.setState({
+        open: true,
+        anchorEl: ReactDOM.findDOMNode(this.refs.searchTextField),
+      });
     }
-    this.focusOnInput = true;
+
+    this.setState({
+      focusTextField: true,
+    });
+
+    if (this.props.onFocus) {
+      this.props.onFocus(event);
+    }
   },
 
   render() {
@@ -326,7 +389,9 @@ const AutoComplete = React.createClass({
       targetOrigin,
       disableFocusRipple,
       triggerUpdateOnFocus,
+      openOnFocus,
       maxSearchResults,
+      dataSource,
       ...other,
     } = this.props;
 
@@ -334,60 +399,50 @@ const AutoComplete = React.createClass({
       open,
       anchorEl,
       searchText,
+      focusTextField,
+      muiTheme: {
+        prepareStyles,
+      },
     } = this.state;
 
-    const styles = {
-      root: {
-        display: 'inline-block',
-        position: 'relative',
-        width: this.props.fullWidth ? '100%' : 256,
-      },
-      input: {
-      },
-      error: {
-      },
-      menu: {
-        width: '100%',
-      },
-      list: {
-        display: 'block',
-        width: this.props.fullWidth ? '100%' : 256,
-      },
-    };
+    const styles = getStyles(this.props, this.state);
 
     const requestsList = [];
 
-    this.props.dataSource.every((item) => {
+    dataSource.every((item) => {
       switch (typeof item) {
         case 'string':
           if (this.props.filter(searchText, item, item)) {
             requestsList.push(item);
           }
           break;
+
         case 'object':
-          if (typeof item.text === 'string') {
+          if (item && typeof item.text === 'string') {
             if (this.props.filter(searchText, item.text, item)) {
               requestsList.push(item);
             }
           }
           break;
       }
+
       return !(maxSearchResults && maxSearchResults > 0 && requestsList.length === maxSearchResults);
     });
 
     this.requestsList = requestsList;
 
-    const menu = open && requestsList.length > 0 ? (
+    const menu = open && requestsList.length > 0 && (
       <Menu
         {...menuProps}
         ref="menu"
-        key="dropDownMenu"
         autoWidth={false}
+        zDepth={0}
+        disableAutoFocus={focusTextField}
         onEscKeyDown={this.close}
         initiallyKeyboardFocused={false}
         onItemTouchTap={this.handleItemTouchTap}
-        listStyle={this.mergeStyles(styles.list, listStyle)}
-        style={this.mergeStyles(styles.menu, menuStyle)}
+        listStyle={Object.assign(styles.list, listStyle)}
+        style={Object.assign(styles.menu, menuStyle)}
       >
         {
           requestsList.map((request, index) => {
@@ -396,12 +451,13 @@ const AutoComplete = React.createClass({
                 return (
                   <MenuItem
                     disableFocusRipple={disableFocusRipple}
-                    innerDivStyle={{overflow: 'hidden'}}
+                    innerDivStyle={styles.innerDiv}
                     key={index}
                     value={request}
                     primaryText={request}
                   />
                 );
+
               case 'object':
                 if (typeof request.text === 'string') {
                   return React.cloneElement(request.value, {
@@ -409,51 +465,38 @@ const AutoComplete = React.createClass({
                     disableFocusRipple: disableFocusRipple,
                   });
                 }
+
                 return React.cloneElement(request, {
-                  key: index,
                   disableFocusRipple: disableFocusRipple,
                 });
+
               default:
                 return null;
             }
           })
         }
       </Menu>
-    ) : null;
-
-    let popoverStyle;
-    if (anchorEl && fullWidth) {
-      popoverStyle = {width: anchorEl.clientWidth};
-    }
+    );
 
     return (
-      <div
-        style={this.prepareStyles(this.mergeStyles(styles.root, style))}
-        onKeyDown={this.handleKeyDown}
-      >
-        <div
-          style={{
-            width: '100%',
-          }}
-        >
-          <TextField
-            {...other}
-            ref="searchTextField"
-            value={searchText}
-            onEnterKeyDown={this.handleEnterKeyDown}
-            onChange={this.handleChange}
-            onBlur={this.handleBlur}
-            onFocus={this.handleFocus}
-            style={styles.input}
-            floatingLabelText={floatingLabelText}
-            hintText={(!hintText && !floatingLabelText) ? '' : hintText}
-            fullWidth={true}
-            multiLine={false}
-            errorStyle={this.mergeStyles(styles.error, errorStyle)}
-          />
-        </div>
+      <div style={prepareStyles(Object.assign(styles.root, style))} >
+        <TextField
+          {...other}
+          ref="searchTextField"
+          autoComplete="off"
+          value={searchText}
+          onChange={this.handleChange}
+          onBlur={this.handleBlur}
+          onFocus={this.handleFocus}
+          onKeyDown={this.handleKeyDown}
+          floatingLabelText={floatingLabelText}
+          hintText={hintText}
+          fullWidth={fullWidth}
+          multiLine={false}
+          errorStyle={errorStyle}
+        />
         <Popover
-          style={popoverStyle}
+          style={styles.popover}
           anchorOrigin={anchorOrigin}
           targetOrigin={targetOrigin}
           open={open}
@@ -471,7 +514,7 @@ const AutoComplete = React.createClass({
 });
 
 AutoComplete.levenshteinDistance = (searchText, key) => {
-  let current = [];
+  const current = [];
   let prev;
   let value;
 

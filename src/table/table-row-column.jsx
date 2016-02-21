@@ -6,7 +6,7 @@ function getStyles(props, state) {
     tableRowColumn,
   } = state.muiTheme;
 
-  let styles = {
+  const styles = {
     root: {
       paddingLeft: tableRowColumn.spacing,
       paddingRight: tableRowColumn.spacing,
@@ -106,26 +106,26 @@ const TableRowColumn = React.createClass({
     });
   },
 
-  _onClick(e) {
-    if (this.props.onClick) this.props.onClick(e, this.props.columnNumber);
+  _onClick(event) {
+    if (this.props.onClick) this.props.onClick(event, this.props.columnNumber);
   },
 
-  _onMouseEnter(e) {
+  _onMouseEnter(event) {
     if (this.props.hoverable) {
       this.setState({hovered: true});
-      if (this.props.onHover) this.props.onHover(e, this.props.columnNumber);
+      if (this.props.onHover) this.props.onHover(event, this.props.columnNumber);
     }
   },
 
-  _onMouseLeave(e) {
+  _onMouseLeave(event) {
     if (this.props.hoverable) {
       this.setState({hovered: false});
-      if (this.props.onHoverExit) this.props.onHoverExit(e, this.props.columnNumber);
+      if (this.props.onHoverExit) this.props.onHoverExit(event, this.props.columnNumber);
     }
   },
 
   render() {
-    let {
+    const {
       children,
       className,
       columnNumber,
@@ -143,7 +143,7 @@ const TableRowColumn = React.createClass({
 
     const styles = getStyles(this.props, this.state);
 
-    let handlers = {
+    const handlers = {
       onClick: this._onClick,
       onMouseEnter: this._onMouseEnter,
       onMouseLeave: this._onMouseLeave,

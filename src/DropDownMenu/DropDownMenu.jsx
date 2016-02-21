@@ -47,6 +47,11 @@ const DropDownMenu = React.createClass({
     labelStyle: React.PropTypes.object,
 
     /**
+     * The style object to use to override underlying list style.
+     */
+    listStyle: React.PropTypes.object,
+
+    /**
      * The maximum height of the `Menu` when it is displayed.
      */
     maxHeight: React.PropTypes.number,
@@ -102,7 +107,7 @@ const DropDownMenu = React.createClass({
 
   getInitialState() {
     return {
-      open: this.props.openImmediately,
+      open: false,
       muiTheme: this.context.muiTheme || getMuiTheme(),
     };
   },
@@ -115,6 +120,12 @@ const DropDownMenu = React.createClass({
 
   componentDidMount() {
     if (this.props.autoWidth) this._setWidth();
+    if (this.props.openImmediately) {
+      /*eslint-disable react/no-did-mount-set-state */
+      // Temorary fix to make openImmediately work with popover.
+      setTimeout(() => this.setState({open: true, anchorEl: this.refs.root}));
+      /*eslint-enable react/no-did-mount-set-state */
+    }
   },
 
   componentWillReceiveProps(nextProps, nextContext) {
@@ -209,7 +220,7 @@ const DropDownMenu = React.createClass({
     }
   },
 
-  _onControlTouchTap(event) {
+  handleTouchTapControl(event) {
     event.preventDefault();
     if (!this.props.disabled) {
       this.setState({
@@ -219,15 +230,15 @@ const DropDownMenu = React.createClass({
     }
   },
 
-  _onMenuItemTouchTap(key, payload, e) {
-    this.props.onChange(e, key, payload);
+  _onMenuItemTouchTap(key, payload, event) {
+    this.props.onChange(event, key, payload);
 
     this.setState({
       open: false,
     });
   },
 
-  _onMenuRequestClose() {
+  handleRequestCloseMenu() {
     this.setState({
       open: false,
       anchorEl: null,
@@ -241,6 +252,7 @@ const DropDownMenu = React.createClass({
       className,
       iconStyle,
       labelStyle,
+      listStyle,
       maxHeight,
       menuStyle,
       style,
@@ -287,14 +299,14 @@ const DropDownMenu = React.createClass({
         className={className}
         style={prepareStyles(Object.assign({}, styles.root, open && styles.rootWhenOpen, style))}
       >
-        <ClearFix style={styles.control} onTouchTap={this._onControlTouchTap}>
+        <ClearFix style={styles.control} onTouchTap={this.handleTouchTapControl}>
           <div
             style={prepareStyles(Object.assign({}, styles.label, open && styles.labelWhenOpen, labelStyle))}
           >
             {displayValue}
           </div>
-          <DropDownArrow style={Object.assign({}, styles.icon, iconStyle)}/>
-          <div style={prepareStyles(Object.assign({}, styles.underline, underlineStyle))}/>
+          <DropDownArrow style={Object.assign({}, styles.icon, iconStyle)} />
+          <div style={prepareStyles(Object.assign({}, styles.underline, underlineStyle))} />
         </ClearFix>
         <Popover
           anchorOrigin={{horizontal: 'left', vertical: 'top'}}
@@ -302,13 +314,14 @@ const DropDownMenu = React.createClass({
           style={popoverStyle}
           animation={PopoverAnimationFromTop}
           open={open}
-          onRequestClose={this._onMenuRequestClose}
+          onRequestClose={this.handleRequestCloseMenu}
         >
           <Menu
             maxHeight={maxHeight}
             desktop={true}
             value={value}
             style={menuStyle}
+            listStyle={listStyle}
           >
             {menuItemElements}
           </Menu>

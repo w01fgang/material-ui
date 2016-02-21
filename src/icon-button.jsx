@@ -1,5 +1,4 @@
 import React from 'react';
-import ContextPure from './mixins/context-pure';
 import Transitions from './styles/transitions';
 import PropTypes from './utils/prop-types';
 import EnhancedButton from './enhanced-button';
@@ -17,6 +16,7 @@ function getStyles(props, state) {
     root: {
       position: 'relative',
       boxSizing: 'border-box',
+      overflow: 'visible',
       transition: Transitions.easeOut(),
       padding: baseTheme.spacing.iconSize / 2,
       width: baseTheme.spacing.iconSize * 2,
@@ -131,34 +131,8 @@ const IconButton = React.createClass({
     muiTheme: React.PropTypes.object,
   },
 
-  //for passing default theme context to children
   childContextTypes: {
     muiTheme: React.PropTypes.object,
-  },
-
-  mixins: [
-    ContextPure,
-  ],
-
-  statics: {
-    getRelevantContextKeys(muiTheme) {
-      const spacing = muiTheme.rawTheme.spacing;
-      const palette = muiTheme.rawTheme.palette;
-
-      return {
-        iconSize: spacing.iconSize,
-        textColor: palette.textColor,
-        disabledColor: palette.disabledColor,
-      };
-    },
-
-    getChildrenClasses() {
-      return [
-        EnhancedButton,
-        FontIcon,
-        Tooltip,
-      ];
-    },
   },
 
   getDefaultProps() {
@@ -203,40 +177,40 @@ const IconButton = React.createClass({
     if (this.props.tooltip) this.setState({tooltipShown: false});
   },
 
-  _handleBlur(e) {
+  _handleBlur(event) {
     this._hideTooltip();
-    if (this.props.onBlur) this.props.onBlur(e);
+    if (this.props.onBlur) this.props.onBlur(event);
   },
 
-  _handleFocus(e) {
+  _handleFocus(event) {
     this._showTooltip();
-    if (this.props.onFocus) this.props.onFocus(e);
+    if (this.props.onFocus) this.props.onFocus(event);
   },
 
-  _handleMouseLeave(e) {
+  _handleMouseLeave(event) {
     if (!this.refs.button.isKeyboardFocused()) this._hideTooltip();
-    if (this.props.onMouseLeave) this.props.onMouseLeave(e);
+    if (this.props.onMouseLeave) this.props.onMouseLeave(event);
   },
 
-  _handleMouseEnter(e) {
+  _handleMouseEnter(event) {
     this._showTooltip();
-    if (this.props.onMouseEnter) this.props.onMouseEnter(e);
+    if (this.props.onMouseEnter) this.props.onMouseEnter(event);
   },
 
-  _handleKeyboardFocus(e, keyboardFocused) {
+  _handleKeyboardFocus(event, keyboardFocused) {
     if (keyboardFocused && !this.props.disabled) {
       this._showTooltip();
-      if (this.props.onFocus) this.props.onFocus(e);
+      if (this.props.onFocus) this.props.onFocus(event);
     } else if (!this.state.hovered) {
       this._hideTooltip();
-      if (this.props.onBlur) this.props.onBlur(e);
+      if (this.props.onBlur) this.props.onBlur(event);
     }
 
-    if (this.props.onKeyboardFocus) this.props.onKeyboardFocus(e, keyboardFocused);
+    if (this.props.onKeyboardFocus) this.props.onKeyboardFocus(event, keyboardFocused);
   },
 
   render() {
-    let {
+    const {
       disabled,
       iconClassName,
       tooltip,
@@ -247,9 +221,9 @@ const IconButton = React.createClass({
     let fonticon;
 
     const styles = getStyles(this.props, this.state);
-    let tooltipPosition = this.props.tooltipPosition.split('-');
+    const tooltipPosition = this.props.tooltipPosition.split('-');
 
-    let tooltipElement = tooltip ? (
+    const tooltipElement = tooltip ? (
       <Tooltip
         ref="tooltip"
         label={tooltip}
@@ -262,7 +236,7 @@ const IconButton = React.createClass({
     ) : null;
 
     if (iconClassName) {
-      let {
+      const {
         iconHoverColor,
         ...iconStyleFontIcon,
       } = iconStyle;
@@ -282,7 +256,7 @@ const IconButton = React.createClass({
       );
     }
 
-    let childrenStyle = disabled ? Object.assign({}, iconStyle, styles.disabled) : iconStyle;
+    const childrenStyle = disabled ? Object.assign({}, iconStyle, styles.disabled) : iconStyle;
 
     return (
       <EnhancedButton

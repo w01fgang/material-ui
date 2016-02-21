@@ -1,5 +1,4 @@
 import React from 'react';
-import Typography from './styles/typography';
 import IconButton from './icon-button';
 import NavigationMenu from './svg-icons/navigation/menu';
 import getMuiTheme from './styles/getMuiTheme';
@@ -10,7 +9,6 @@ import warning from 'warning';
 function getStyles(props, state) {
   const {
     appBar,
-    baseTheme,
     button: {
       iconButtonSize,
     },
@@ -27,8 +25,8 @@ function getStyles(props, state) {
       display: 'flex',
       minHeight: appBar.height,
       backgroundColor: appBar.color,
-      paddingLeft: baseTheme.spacing.desktopGutter,
-      paddingRight: baseTheme.spacing.desktopGutter,
+      paddingLeft: appBar.padding,
+      paddingRight: appBar.padding,
     },
     title: {
       whiteSpace: 'nowrap',
@@ -38,7 +36,7 @@ function getStyles(props, state) {
       paddingTop: 0,
       letterSpacing: 0,
       fontSize: 24,
-      fontWeight: Typography.fontWeightNormal,
+      fontWeight: appBar.titleFontWeight,
       color: appBar.textColor,
       lineHeight: `${appBar.height}px`,
     },
@@ -57,7 +55,7 @@ function getStyles(props, state) {
     },
     flatButton: {
       color: appBar.textColor,
-      marginTop: (iconButtonSize - flatButtonSize) / 2 + 2,
+      marginTop: (iconButtonSize - flatButtonSize) / 2 + 1,
     },
   };
 
@@ -202,14 +200,14 @@ const AppBar = React.createClass({
     }
   },
 
-  _onTitleTouchTap(event) {
+  handleTitleTouchTap(event) {
     if (this.props.onTitleTouchTap) {
       this.props.onTitleTouchTap(event);
     }
   },
 
   render() {
-    let {
+    const {
       title,
       titleStyle,
       iconStyleRight,
@@ -240,13 +238,13 @@ const AppBar = React.createClass({
       // If not, just use it as a node.
       titleElement = typeof title === 'string' || title instanceof String ?
         <h1
-          onTouchTap={this._onTitleTouchTap}
+          onTouchTap={this.handleTitleTouchTap}
           style={prepareStyles(Object.assign({}, styles.title, styles.mainElement, titleStyle))}
         >
           {title}
         </h1> :
         <div
-          onTouchTap={this._onTitleTouchTap}
+          onTouchTap={this.handleTitleTouchTap}
           style={prepareStyles(Object.assign({}, styles.title, styles.mainElement, titleStyle))}
         >
           {title}
@@ -254,10 +252,12 @@ const AppBar = React.createClass({
     }
 
     if (showMenuIconButton) {
+      let iconElementLeftNode = iconElementLeft;
+
       if (iconElementLeft) {
         switch (iconElementLeft.type.displayName) {
           case 'IconButton':
-            iconElementLeft = React.cloneElement(iconElementLeft, {
+            iconElementLeftNode = React.cloneElement(iconElementLeft, {
               iconStyle: Object.assign({}, styles.iconButtonIconStyle, iconElementLeft.props.iconStyle),
             });
             break;
@@ -265,11 +265,11 @@ const AppBar = React.createClass({
 
         menuElementLeft = (
           <div style={prepareStyles(Object.assign({}, styles.iconButtonStyle))}>
-            {iconElementLeft}
+            {iconElementLeftNode}
           </div>
         );
       } else {
-        let child = iconClassNameLeft ? '' : <NavigationMenu style={Object.assign({}, styles.iconButtonIconStyle)}/>;
+        const child = iconClassNameLeft ? '' : <NavigationMenu style={Object.assign({}, styles.iconButtonIconStyle)} />;
         menuElementLeft = (
           <IconButton
             style={styles.iconButtonStyle}
@@ -289,16 +289,18 @@ const AppBar = React.createClass({
     }, iconStyleRight);
 
     if (iconElementRight) {
+      let iconElementRightNode = iconElementRight;
+
       switch (iconElementRight.type.displayName) {
         case 'IconMenu':
         case 'IconButton':
-          iconElementRight = React.cloneElement(iconElementRight, {
+          iconElementRightNode = React.cloneElement(iconElementRight, {
             iconStyle: Object.assign({}, styles.iconButtonIconStyle, iconElementRight.props.iconStyle),
           });
           break;
 
         case 'FlatButton':
-          iconElementRight = React.cloneElement(iconElementRight, {
+          iconElementRightNode = React.cloneElement(iconElementRight, {
             style: Object.assign({}, styles.flatButton, iconElementRight.props.style),
           });
           break;
@@ -306,7 +308,7 @@ const AppBar = React.createClass({
 
       menuElementRight = (
         <div style={prepareStyles(iconRightStyle)}>
-          {iconElementRight}
+          {iconElementRightNode}
         </div>
       );
     } else if (iconClassNameRight) {
