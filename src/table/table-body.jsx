@@ -152,9 +152,8 @@ const TableBody = React.createClass({
     };
 
     if (this.props.allRowsSelected && !nextProps.allRowsSelected) {
-      newState.selectedRows = this.state.selectedRows.length > 0
-        ? [this.state.selectedRows[this.state.selectedRows.length - 1]]
-        : [];
+      newState.selectedRows = this.state.selectedRows.length > 0 ?
+        [this.state.selectedRows[this.state.selectedRows.length - 1]] : [];
     } else {
       newState.selectedRows = this._calculatePreselectedRows(nextProps);
     }
@@ -183,10 +182,11 @@ const TableBody = React.createClass({
 
     return React.Children.map(this.props.children, (child) => {
       if (React.isValidElement(child)) {
+        const {selected} = child.props;
         const props = {
           displayRowCheckbox: this.props.displayRowCheckbox,
           hoverable: this.props.showRowHover,
-          selected: this._isRowSelected(rowNumber),
+          selected: selected !== undefined ? selected : this._isRowSelected(rowNumber),
           striped: this.props.stripedRows && (rowNumber % 2 === 0),
           rowNumber: rowNumber++,
         };
@@ -201,7 +201,7 @@ const TableBody = React.createClass({
           children.push(child);
         });
 
-        return React.cloneElement(child, {...props, ...handlers}, children);
+        return React.cloneElement(child, {...props, ...handlers, ...child.props}, children);
       }
     });
   },
@@ -212,7 +212,6 @@ const TableBody = React.createClass({
     const key = `${rowProps.rowNumber}-cb`;
     const checkbox = (
       <Checkbox
-        ref="rowSelectCB"
         name={key}
         value="selected"
         disabled={!this.props.selectable}
