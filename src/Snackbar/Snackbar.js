@@ -115,7 +115,7 @@ class Snackbar extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (this.state.open && nextProps.open === this.props.open &&
+    if (this.props.open && nextProps.open &&
         (nextProps.message !== this.props.message || nextProps.action !== this.props.action)) {
       this.setState({
         open: false,
@@ -198,7 +198,7 @@ class Snackbar extends Component {
       onActionTouchTap,
       style,
       bodyStyle,
-      ...others,
+      ...other,
     } = this.props;
 
     const {
@@ -212,7 +212,7 @@ class Snackbar extends Component {
 
     return (
       <ClickAwayListener onClickAway={open && this.componentClickAway}>
-        <div {...others} style={prepareStyles(Object.assign(styles.root, style))}>
+        <div {...other} style={prepareStyles(Object.assign(styles.root, style))}>
           <SnackbarBody
             open={open}
             message={message}
