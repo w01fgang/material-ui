@@ -4,6 +4,7 @@ import Events from '../utils/events';
 import propTypes from '../utils/propTypes';
 import Menu from '../Menu/Menu';
 import Popover from '../Popover/Popover';
+import warning from 'warning';
 
 class IconMenu extends Component {
   static muiName = 'IconMenu';
@@ -245,7 +246,7 @@ class IconMenu extends Component {
       targetOrigin,
       touchTapCloseDelay, // eslint-disable-line no-unused-vars
       useLayerForClickAway,
-      ...other,
+      ...other
     } = this.props;
 
     const {prepareStyles} = this.context.muiTheme;
@@ -264,9 +265,15 @@ class IconMenu extends Component {
     const mergedRootStyles = Object.assign(styles.root, style);
     const mergedMenuStyles = Object.assign(styles.menu, menuStyle);
 
+    warning(iconButtonElement.type.muiName !== 'SvgIcon',
+      `Material-UI: You shoud not provide an <SvgIcon /> to the 'iconButtonElement' property of <IconMenu />.
+You should wrapped it with an <IconButton />.`);
+
     const iconButton = React.cloneElement(iconButtonElement, {
       onKeyboardFocus: onKeyboardFocus,
-      iconStyle: Object.assign({}, iconStyle, iconButtonElement.props.iconStyle),
+      iconStyle: iconStyle ?
+        Object.assign({}, iconStyle, iconButtonElement.props.iconStyle) :
+        iconButtonElement.props.iconStyle,
       onTouchTap: (event) => {
         this.open(Events.isKeyboard(event) ? 'keyboard' : 'iconTap', event);
         if (iconButtonElement.props.onTouchTap) {

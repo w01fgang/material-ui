@@ -142,8 +142,7 @@ class RefreshIndicator extends Component {
           <circle
             style={prepareStyles(circleStyle.style)}
             {...circleStyle.attr}
-          >
-          </circle>
+          />
           <polygon
             style={prepareStyles(polygonStyle.style)}
             {...polygonStyle.attr}
@@ -302,14 +301,23 @@ class RefreshIndicator extends Component {
   }
 
   render() {
-    const {style} = this.props;
+    const {
+      style,
+      top, // eslint-disable-line no-unused-vars
+      left, // eslint-disable-line no-unused-vars
+      percentage, // eslint-disable-line no-unused-vars
+      status, // eslint-disable-line no-unused-vars
+      loadingColor, // eslint-disable-line no-unused-vars
+      ...other
+    } = this.props;
+
     const styles = getStyles(this.props, this.context);
 
     return (
       <Paper
         circle={true}
         style={Object.assign(styles.root, style)}
-        ref="indicatorCt"
+        {...other}
       >
         {this.renderChildren()}
       </Paper>

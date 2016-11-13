@@ -14,7 +14,7 @@ function getStyles(props, context, state) {
       resize: 'none',
       font: 'inherit',
       padding: 0,
-      cursor: props.disabled ? 'not-allowed' : 'initial',
+      cursor: 'inherit',
     },
     shadow: {
       resize: 'none',
@@ -97,6 +97,10 @@ class EnhancedTextarea extends Component {
 
     let newHeight = shadow.scrollHeight;
 
+    // Guarding for jsdom, where scrollHeight isn't present.
+    // See https://github.com/tmpvar/jsdom/issues/1013
+    if (newHeight === undefined) return;
+
     if (this.props.rowsMax >= this.props.rows) {
       newHeight = Math.min(this.props.rowsMax * rowsHeight, newHeight);
     }
@@ -136,7 +140,7 @@ class EnhancedTextarea extends Component {
       style,
       textareaStyle,
       valueLink, // eslint-disable-line no-unused-vars
-      ...other,
+      ...other
     } = this.props;
 
     const {prepareStyles} = this.context.muiTheme;

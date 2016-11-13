@@ -144,7 +144,7 @@ class Tooltip extends Component {
       show, // eslint-disable-line no-unused-vars
       touch, // eslint-disable-line no-unused-vars
       verticalPosition, // eslint-disable-line no-unused-vars
-      ...other,
+      ...other
     } = this.props;
 
     const {prepareStyles} = this.context.muiTheme;
@@ -167,8 +167,7 @@ class Tooltip extends Component {
             styles.ripple,
             this.props.show && styles.rippleWhenShown
           ))}
-        >
-        </div>
+        />
         <span style={prepareStyles(styles.label)}>
           {label}
         </span>

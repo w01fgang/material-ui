@@ -121,6 +121,10 @@ class RaisedButton extends Component {
      */
     backgroundColor: PropTypes.string,
     /**
+     * Override the inline-styles of the button element.
+     */
+    buttonStyle: PropTypes.object,
+    /**
      * The content of the button.
      * If a label is provided via the `label` prop, the text within the label
      * will be displayed in addition to the content provided here.
@@ -189,6 +193,10 @@ class RaisedButton extends Component {
     /** @ignore */
     onTouchStart: PropTypes.func,
     /**
+     * Override the inline style of the button overlay.
+     */
+    overlayStyle: PropTypes.object,
+    /**
      * If true, the button will use the theme's primary color.
      */
     primary: PropTypes.bool,
@@ -243,7 +251,7 @@ class RaisedButton extends Component {
       initialZDepth: zDepth,
     };
 
-    if (nextProps.disabled && this.state.hovered) {
+    if (nextProps.disabled) {
       nextState.hovered = false;
     }
 
@@ -307,6 +315,7 @@ class RaisedButton extends Component {
 
   handleTouchEnd = (event) => {
     this.setState({
+      touched: true,
       zDepth: this.state.initialZDepth,
     });
 
@@ -327,19 +336,24 @@ class RaisedButton extends Component {
   render() {
     const {
       backgroundColor, // eslint-disable-line no-unused-vars
+      buttonStyle,
       children,
       className,
       disabled,
+      disabledBackgroundColor, // eslint-disable-line no-unused-vars
+      disabledLabelColor, // eslint-disable-line no-unused-vars
       fullWidth, // eslint-disable-line no-unused-vars
       icon,
       label,
       labelColor, // eslint-disable-line no-unused-vars
       labelPosition,
       labelStyle,
+      overlayStyle,
       primary, // eslint-disable-line no-unused-vars
       rippleStyle,
       secondary, // eslint-disable-line no-unused-vars
-      ...other,
+      style,
+      ...other
     } = this.props;
 
     const {prepareStyles} = this.context.muiTheme;
@@ -384,7 +398,7 @@ class RaisedButton extends Component {
     return (
       <Paper
         className={className}
-        style={Object.assign(styles.root, this.props.style)}
+        style={Object.assign(styles.root, style)}
         zDepth={this.state.zDepth}
       >
         <EnhancedButton
@@ -392,7 +406,7 @@ class RaisedButton extends Component {
           {...buttonEventHandlers}
           ref="container"
           disabled={disabled}
-          style={styles.button}
+          style={Object.assign(styles.button, buttonStyle)}
           focusRippleColor={mergedRippleStyles.color}
           touchRippleColor={mergedRippleStyles.color}
           focusRippleOpacity={mergedRippleStyles.opacity}
@@ -400,7 +414,7 @@ class RaisedButton extends Component {
         >
           <div
             ref="overlay"
-            style={prepareStyles(styles.overlay)}
+            style={prepareStyles(Object.assign(styles.overlay, overlayStyle))}
           >
             {enhancedButtonChildren}
           </div>

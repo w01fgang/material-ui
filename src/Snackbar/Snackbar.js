@@ -20,15 +20,14 @@ function getStyles(props, context, state) {
   const styles = {
     root: {
       position: 'fixed',
-      left: 0,
+      left: '50%',
       display: 'flex',
-      right: 0,
       bottom: 0,
       zIndex: zIndex.snackbar,
       visibility: open ? 'visible' : 'hidden',
       transform: open ?
-        'translate(0, 0)' :
-        `translate(0, ${desktopSubheaderHeight}px)`,
+        'translate(-50%, 0)' :
+        `translate(-50%, ${desktopSubheaderHeight}px)`,
       transition: `${transitions.easeOut('400ms', 'transform')}, ${
         transitions.easeOut('400ms', 'visibility')}`,
     },
@@ -58,6 +57,10 @@ class Snackbar extends Component {
      * The css class name of the root element.
      */
     className: PropTypes.string,
+    /**
+     * Override the inline-styles of the content element.
+     */
+    contentStyle: PropTypes.object,
     /**
      * The message to be displayed.
      *
@@ -196,12 +199,13 @@ class Snackbar extends Component {
   render() {
     const {
       autoHideDuration, // eslint-disable-line no-unused-vars
+      contentStyle,
+      bodyStyle,
       message: messageProp, // eslint-disable-line no-unused-vars
       onRequestClose, // eslint-disable-line no-unused-vars
       onActionTouchTap,
       style,
-      bodyStyle,
-      ...other,
+      ...other
     } = this.props;
 
     const {
@@ -214,14 +218,15 @@ class Snackbar extends Component {
     const styles = getStyles(this.props, this.context, this.state);
 
     return (
-      <ClickAwayListener onClickAway={open && this.componentClickAway}>
+      <ClickAwayListener onClickAway={open ? this.componentClickAway : null}>
         <div {...other} style={prepareStyles(Object.assign(styles.root, style))}>
           <SnackbarBody
-            open={open}
-            message={message}
             action={action}
-            style={bodyStyle}
+            contentStyle={contentStyle}
+            message={message}
+            open={open}
             onActionTouchTap={onActionTouchTap}
+            style={bodyStyle}
           />
         </div>
       </ClickAwayListener>

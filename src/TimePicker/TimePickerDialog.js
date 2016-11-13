@@ -55,10 +55,12 @@ class TimePickerDialog extends Component {
   };
 
   handleTouchTapOK = () => {
-    this.dismiss();
     if (this.props.onAccept) {
       this.props.onAccept(this.refs.clock.getSelectedTime());
     }
+    this.setState({
+      open: false,
+    });
   };
 
   handleKeyUp = (event) => {
@@ -79,7 +81,7 @@ class TimePickerDialog extends Component {
       okLabel,
       cancelLabel,
       style,
-      ...other,
+      ...other
     } = this.props;
 
     const styles = {

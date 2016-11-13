@@ -20,6 +20,7 @@ function getStyles(props, context) {
     root: {
       color: props.disabled ? disabledColor : textColor,
       cursor: props.disabled ? 'not-allowed' : 'pointer',
+      minHeight: props.desktop ? '32px' : '48px',
       lineHeight: props.desktop ? '32px' : '48px',
       fontSize: props.desktop ? 15 : 16,
       whiteSpace: 'nowrap',
@@ -233,7 +234,7 @@ class MenuItem extends Component {
       style,
       animation,
       value, // eslint-disable-line no-unused-vars
-      ...other,
+      ...other
     } = this.props;
 
     const {prepareStyles} = this.context.muiTheme;
@@ -266,7 +267,7 @@ class MenuItem extends Component {
 
       secondaryTextElement = secondaryTextIsAnElement ?
         React.cloneElement(secondaryText, {style: mergedSecondaryTextStyles}) :
-        <div style={prepareStyles(styles.secondaryText)}>{secondaryText}</div>;
+          <div style={prepareStyles(styles.secondaryText)}>{secondaryText}</div>;
     }
     let childMenuPopover;
     if (menuItems) {
@@ -291,6 +292,7 @@ class MenuItem extends Component {
       <ListItem
         {...other}
         disabled={disabled}
+        hoverColor={this.context.muiTheme.menuItem.hoverColor}
         innerDivStyle={mergedInnerDivStyles}
         insetChildren={insetChildren}
         leftIcon={leftIconElement}

@@ -158,17 +158,22 @@ class FloatingActionButton extends Component {
 
   componentDidMount() {
     warning(!this.props.iconClassName || !this.props.children,
-      'You have set both an iconClassName and a child icon. ' +
+      'Material-UI: You have set both an iconClassName and a child icon. ' +
       'It is recommended you use only one method when adding ' +
       'icons to FloatingActionButtons.');
   }
 
   componentWillReceiveProps(nextProps) {
+    const nextState = {};
+
     if (nextProps.disabled !== this.props.disabled) {
-      this.setState({
-        zDepth: nextProps.disabled ? 0 : this.props.zDepth,
-      });
+      nextState.zDepth = nextProps.disabled ? 0 : this.props.zDepth;
     }
+    if (nextProps.disabled) {
+      nextState.hovered = false;
+    }
+
+    this.setState(nextState);
   }
 
   handleMouseDown = (event) => {
@@ -215,7 +220,10 @@ class FloatingActionButton extends Component {
   };
 
   handleTouchEnd = (event) => {
-    this.setState({zDepth: this.props.zDepth});
+    this.setState({
+      touch: true,
+      zDepth: this.props.zDepth,
+    });
     if (this.props.onTouchEnd) {
       this.props.onTouchEnd(event);
     }
@@ -236,13 +244,14 @@ class FloatingActionButton extends Component {
     const {
       backgroundColor, // eslint-disable-line no-unused-vars
       className,
+      children: childrenProp,
       disabled,
       mini,
       secondary, // eslint-disable-line no-unused-vars
       iconStyle,
       iconClassName,
       zDepth, // eslint-disable-line no-unused-vars
-      ...other,
+      ...other
     } = this.props;
 
     const {prepareStyles} = this.context.muiTheme;
@@ -261,12 +270,17 @@ class FloatingActionButton extends Component {
       );
     }
 
-    const children = extendChildren(this.props.children, {
-      style: Object.assign({},
-        styles.icon,
-        mini && styles.iconWhenMini,
-        iconStyle),
-    });
+    let children;
+
+    if (childrenProp) {
+      children = extendChildren(childrenProp, (child) => ({
+        style: Object.assign({},
+          styles.icon,
+          mini && styles.iconWhenMini,
+          iconStyle,
+          child.props.style),
+      }));
+    }
 
     const buttonEventHandlers = disabled ? null : {
       onMouseDown: this.handleMouseDown,

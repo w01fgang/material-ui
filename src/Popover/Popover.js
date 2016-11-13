@@ -4,7 +4,7 @@ import EventListener from 'react-event-listener';
 import RenderToLayer from '../internal/RenderToLayer';
 import propTypes from '../utils/propTypes';
 import Paper from '../Paper';
-import throttle from 'lodash/throttle';
+import throttle from 'lodash.throttle';
 import PopoverAnimationDefault from './PopoverAnimationDefault';
 
 class Popover extends Component {
@@ -120,6 +120,10 @@ class Popover extends Component {
     };
   }
 
+  componentDidMount() {
+    this.setPlacement();
+  }
+
   componentWillReceiveProps(nextProps) {
     if (nextProps.open !== this.state.open) {
       if (nextProps.open) {
@@ -130,10 +134,13 @@ class Popover extends Component {
         });
       } else {
         if (nextProps.animated) {
+          if (this.timeout !== null) return;
           this.setState({closing: true});
           this.timeout = setTimeout(() => {
             this.setState({
               open: false,
+            }, () => {
+              this.timeout = null;
             });
           }, 500);
         } else {
@@ -150,33 +157,60 @@ class Popover extends Component {
   }
 
   componentWillUnmount() {
-    clearTimeout(this.timeout);
+    this.handleResize.cancel();
+    this.handleScroll.cancel();
+
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
   }
+
+  timeout = null;
 
   renderLayer = () => {
     const {
-      animated, // eslint-disable-line no-unused-vars
+      animated,
       animation,
+      anchorEl, // eslint-disable-line no-unused-vars
+      anchorOrigin, // eslint-disable-line no-unused-vars
+      autoCloseWhenOffScreen, // eslint-disable-line no-unused-vars
+      canAutoPosition, // eslint-disable-line no-unused-vars
       children,
+      onRequestClose, // eslint-disable-line no-unused-vars
       style,
-      ...other,
+      targetOrigin,
+      useLayerForClickAway, // eslint-disable-line no-unused-vars
+      ...other
     } = this.props;
 
-    let Animation = animation || PopoverAnimationDefault;
     let styleRoot = style;
 
-    if (!Animation) {
-      Animation = Paper;
+    if (!animated) {
       styleRoot = {
         position: 'fixed',
       };
+
       if (!this.state.open) {
         return null;
       }
+
+      return (
+        <Paper style={Object.assign({}, styleRoot, style)} {...other}>
+          {children}
+        </Paper>
+      );
     }
 
+    const Animation = animation || PopoverAnimationDefault;
+
     return (
-      <Animation {...other} style={styleRoot} open={this.state.open && !this.state.closing}>
+      <Animation
+        targetOrigin={targetOrigin}
+        style={styleRoot}
+        {...other}
+        open={this.state.open && !this.state.closing}
+      >
         {children}
       </Animation>
     );
@@ -191,10 +225,6 @@ class Popover extends Component {
   componentClickAway = () => {
     this.requestClose('clickAway');
   };
-
-  _resizeAutoPosition() {
-    this.setPlacement();
-  }
 
   getAnchorPosition(el) {
     if (!el) {
@@ -233,8 +263,6 @@ class Popover extends Component {
       return;
     }
 
-    const anchorEl = this.props.anchorEl || this.anchorEl;
-
     if (!this.refs.layer.getLayer()) {
       return;
     }
@@ -245,6 +273,7 @@ class Popover extends Component {
     }
 
     const {targetOrigin, anchorOrigin} = this.props;
+    const anchorEl = this.props.anchorEl || this.anchorEl;
 
     const anchor = this.getAnchorPosition(anchorEl);
     let target = this.getTargetPosition(targetEl);
@@ -348,7 +377,7 @@ class Popover extends Component {
 
   render() {
     return (
-      <div style={{display: 'none'}}>
+      <div>
         <EventListener
           target="window"
           onScroll={this.handleScroll}

@@ -29,7 +29,6 @@ class DatePickerDialog extends Component {
     open: PropTypes.bool,
     shouldDisableDate: PropTypes.func,
     style: PropTypes.object,
-    wordings: PropTypes.object,
   };
 
   static defaultProps = {
@@ -120,9 +119,8 @@ class DatePickerDialog extends Component {
       onShow, // eslint-disable-line no-unused-vars
       shouldDisableDate,
       style, // eslint-disable-line no-unused-vars
-      wordings,
       animation,
-      ...other,
+      ...other
     } = this.props;
 
     const {open} = this.state;
@@ -175,7 +173,6 @@ class DatePickerDialog extends Component {
             onTouchTapOk={this.handleTouchTapOk}
             okLabel={okLabel}
             shouldDisableDate={shouldDisableDate}
-            wordings={wordings}
           />
         </Container>
       </div>

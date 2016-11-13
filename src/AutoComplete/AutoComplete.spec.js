@@ -6,6 +6,7 @@ import {shallow} from 'enzyme';
 import {spy} from 'sinon';
 import AutoComplete from './AutoComplete';
 import Menu from '../Menu/Menu';
+import Popover from '../Popover/Popover';
 import getMuiTheme from '../styles/getMuiTheme';
 
 describe('<AutoComplete />', () => {
@@ -60,7 +61,7 @@ describe('<AutoComplete />', () => {
     });
   });
 
-  describe('props: onNewRequest', () => {
+  describe('prop: onNewRequest', () => {
     it('should call onNewRequest once the popover is closed', (done) => {
       const handleNewRequest = spy();
       const wrapper = shallowWithContext(
@@ -84,6 +85,53 @@ describe('<AutoComplete />', () => {
         assert.strictEqual(wrapper.state().searchText, 'foo');
         done();
       }, 20);
+    });
+  });
+
+  describe('prop: onUpdateInput', () => {
+    it('should fire after selection from menu', (done) => {
+      const handleUpdateInput = spy();
+      const wrapper = shallowWithContext(
+        <AutoComplete
+          dataSource={['foo', 'bar']}
+          searchText="f"
+          onUpdateInput={handleUpdateInput}
+          menuCloseDelay={10}
+        />
+      );
+
+      wrapper.setState({open: true});
+      wrapper.find(Menu).props().onItemTouchTap({}, {
+        key: 0,
+      });
+      assert.strictEqual(handleUpdateInput.callCount, 0);
+      assert.strictEqual(wrapper.state().searchText, 'f');
+
+      setTimeout(() => {
+        assert.strictEqual(handleUpdateInput.callCount, 1);
+        assert.strictEqual(handleUpdateInput.getCall(0).args[0], 'foo');
+        assert.strictEqual(wrapper.state().searchText, 'foo');
+        done();
+      }, 20);
+    });
+  });
+
+  describe('prop: popoverProps', () => {
+    it('should pass popoverProps to Popover', () => {
+      const wrapper = shallowWithContext(
+        <AutoComplete
+          dataSource={['foo', 'bar']}
+          popoverProps={{
+            zDepth: 3,
+            canAutoPosition: true,
+          }}
+        />
+      );
+
+      const popoverProps = wrapper.find(Popover).props();
+
+      assert.strictEqual(popoverProps.zDepth, 3, 'should pass popoverProps to Popover');
+      assert.strictEqual(popoverProps.canAutoPosition, true, 'should overrides the default');
     });
   });
 });

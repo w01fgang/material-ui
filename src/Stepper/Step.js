@@ -19,8 +19,7 @@ const getStyles = ({index}, {stepper}) => {
   return styles;
 };
 
-export default class Step extends Component {
-
+class Step extends Component {
   static propTypes = {
     /**
      * Sets the step as active. Is passed to child components.
@@ -85,7 +84,7 @@ export default class Step extends Component {
       last, // eslint-disable-line no-unused-vars
       children,
       style,
-      ...other,
+      ...other
     } = this.props;
 
     const {prepareStyles} = this.context.muiTheme;
@@ -98,3 +97,5 @@ export default class Step extends Component {
     );
   }
 }
+
+export default Step;

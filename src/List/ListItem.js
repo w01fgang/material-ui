@@ -28,7 +28,7 @@ function getStyles(props, context, state) {
   const {listItem} = muiTheme;
 
   const textColor = muiTheme.baseTheme.palette.textColor;
-  const hoverColor = fade(textColor, 0.1);
+  const hoverColor = props.hoverColor || fade(textColor, 0.1);
   const singleAvatar = !secondaryText && (leftAvatar || rightAvatar);
   const singleNoAvatar = !secondaryText && !(leftAvatar || rightAvatar);
   const twoLine = secondaryText && secondaryTextLines === 1;
@@ -165,6 +165,10 @@ class ListItem extends Component {
      */
     disabled: PropTypes.bool,
     /**
+    * Override the hover background color.
+    */
+    hoverColor: PropTypes.string,
+    /**
      * If true, the nested `ListItem`s are initially displayed.
      */
     initiallyOpen: PropTypes.bool,
@@ -224,6 +228,10 @@ class ListItem extends Component {
     /** @ignore */
     onTouchTap: PropTypes.func,
     /**
+     * Control toggle state of nested list.
+     */
+    open: PropTypes.bool,
+    /**
      * This is the block element that contains the primary text.
      * If a string is passed in, a div tag will be rendered.
      */
@@ -282,6 +290,7 @@ class ListItem extends Component {
     onMouseLeave: () => {},
     onNestedListToggle: () => {},
     onTouchStart: () => {},
+    open: null,
     primaryTogglesNestedList: false,
     secondaryTextLines: 1,
   };
@@ -300,9 +309,17 @@ class ListItem extends Component {
   };
 
   componentWillMount() {
-    if (this.props.initiallyOpen) {
-      this.setState({open: true});
-    }
+    this.setState({
+      open: this.props.open === null ? this.props.initiallyOpen === true : this.props.open,
+    });
+  }
+
+  componentWillReceiveProps(nextProps) {
+    // update the state when the component is controlled.
+    if (nextProps.open !== null)
+      this.setState({open: nextProps.open});
+    if (nextProps.disabled && this.state.hovered)
+      this.setState({hovered: false});
   }
 
   shouldComponentUpdate(nextProps, nextState, nextContext) {
@@ -355,7 +372,7 @@ class ListItem extends Component {
       >
         {contentChildren}
       </div>
-     );
+    );
   }
 
   createLabelElement(styles, contentChildren, additionalProps) {
@@ -379,7 +396,7 @@ class ListItem extends Component {
       >
         {contentChildren}
       </label>
-     );
+    );
   }
 
   createTextElement(styles, data, key) {
@@ -419,9 +436,21 @@ class ListItem extends Component {
 
   handleNestedListToggle = (event) => {
     event.stopPropagation();
-    this.setState({open: !this.state.open}, () => {
-      this.props.onNestedListToggle(this);
-    });
+
+    if (this.props.open === null) {
+      this.setState({open: !this.state.open}, () => {
+        this.props.onNestedListToggle(this);
+      });
+    } else {
+      // Exposing `this` in the callback is quite a bad API.
+      // I'm doing a one level deep clone to expose a fake state.open.
+      this.props.onNestedListToggle({
+        ...this,
+        state: {
+          open: !this.state.open,
+        },
+      });
+    }
   };
 
   handleRightIconButtonKeyboardFocus = (event, isKeyboardFocused) => {
@@ -487,6 +516,7 @@ class ListItem extends Component {
       children,
       disabled,
       disableKeyboardFocus,
+      hoverColor, // eslint-disable-line no-unused-vars
       initiallyOpen, // eslint-disable-line no-unused-vars
       innerDivStyle,
       insetChildren, // eslint-disable-line no-unused-vars
@@ -511,7 +541,7 @@ class ListItem extends Component {
       secondaryText,
       secondaryTextLines, // eslint-disable-line no-unused-vars
       style,
-      ...other,
+      ...other
     } = this.props;
 
     const {prepareStyles} = this.context.muiTheme;
@@ -586,7 +616,7 @@ class ListItem extends Component {
       if (needsNestedIndicator) {
         rightIconButtonElement = this.state.open ?
           <IconButton><OpenIcon /></IconButton> :
-          <IconButton><CloseIcon /></IconButton>;
+            <IconButton><CloseIcon /></IconButton>;
         rightIconButtonHandlers.onTouchTap = this.handleNestedListToggle;
       }
 
@@ -630,15 +660,15 @@ class ListItem extends Component {
       </NestedList>
     ) : undefined;
 
-    const hasCheckbox = leftCheckbox || rightToggle;
+    const simpleLabel = !primaryTogglesNestedList && (leftCheckbox || rightToggle);
 
     return (
       <div>
         {
-          hasCheckbox ? this.createLabelElement(styles, contentChildren, other) :
+          simpleLabel ? this.createLabelElement(styles, contentChildren, other) :
           disabled ? this.createDisabledElement(styles, contentChildren, other) : (
             <EnhancedButton
-              containerElement={'span'}
+              containerElement="span"
               {...other}
               disabled={disabled}
               disableKeyboardFocus={disableKeyboardFocus || this.state.rightIconButtonKeyboardFocused}
